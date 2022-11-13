@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/biglayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/bTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btitle"
+        android:textSize="20sp" />
+
+    <Spinner
+        android:id="@+id/bSpin"
+        android:layout_width="409dp"
+        android:layout_height="wrap_content"
+        android:entries="@array/sample_big"
+        android:minHeight="45sp" />
+
+</LinearLayout>

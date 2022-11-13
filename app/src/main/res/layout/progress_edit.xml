@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <EditText
+        android:id="@+id/editProgCon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:gravity="top"
+        android:hint="進捗状況を記入"
+        android:inputType="textMultiLine"
+        android:lines="8"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtProgress" />
+
+    <TextView
+        android:id="@+id/txtProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="進捗状況"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <SeekBar
+        android:id="@+id/seekProg"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:max="100"
+        android:progress="0"
+        app:layout_constraintEnd_toEndOf="@+id/editProgCon"
+        app:layout_constraintStart_toStartOf="@+id/editProgCon"
+        app:layout_constraintTop_toBottomOf="@+id/txtFin" />
+
+    <EditText
+        android:id="@+id/editProg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="@+id/seekProg"
+        app:layout_constraintStart_toStartOf="@+id/seekProg"
+        app:layout_constraintTop_toBottomOf="@+id/seekProg" />
+
+    <CheckBox
+        android:id="@+id/chkFin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="達成完了"
+        app:layout_constraintEnd_toEndOf="@+id/editProg"
+        app:layout_constraintTop_toBottomOf="@+id/editProg" />
+
+    <TextView
+        android:id="@+id/txtFin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="タスク達成率(0~100)"
+        app:layout_constraintEnd_toEndOf="@+id/editProgCon"
+        app:layout_constraintStart_toStartOf="@+id/editProgCon"
+        app:layout_constraintTop_toBottomOf="@+id/editProgCon" />
+</androidx.constraintlayout.widget.ConstraintLayout>

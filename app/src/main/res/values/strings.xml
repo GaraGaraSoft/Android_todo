@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">ToDo</string>
+    <string name="input_title">目標・スケジュール一覧</string>
+    <string name="big">大目標</string>
+    <string name="middle">中目標</string>
+    <string name="small">小目標</string>
+    <string name="sche">本日のスケジュール</string>
+    <string name="selectLevel">目標選択</string>
+    <string name="edit">編集</string>
+    <string name="delete">削除</string>
+    <string name="editLevel">編集項目</string>
+    <string name="editSubmit">編集完了</string>
+    <string name="editContent">編集内容</string>
+    <string name="editTitle">編集タイトル</string>
+    <string name="insertTitle">タイトルを入力してください</string>
+    <string name="btitle">大目標一覧</string>
+    <string name="mtitle">中目標一覧</string>
+    <string-array name="level">
+        <item>大目標</item>
+        <item>中目標</item>
+        <item>小目標</item>
+        <item>スケジュール</item>
+        <item>やること</item>
+    </string-array>
+    <string-array name="sample_big">
+        <item>big1</item>
+        <item>big2</item>
+    </string-array>
+    <string-array name="sample_middle">
+        <item>middle1</item>
+        <item>middle2</item>
+    </string-array>
+    <string name="date">日付を入力</string>
+    <string name="datePickup">日付選択</string>
+    <string name="newin">新規</string>
+    <string name="log">ログ</string>
+    <string name="hold">保留</string>
+    <string name="reload">更新</string>
+    <string name="schedule">スケジュール</string>
+    <string name="todoTitle">やること</string>
+    <string name="con">内容を記入</string>
+    <string name="top">TOP画面へ</string>
+    <string name="holdon">保留状態</string>
+    <string name="holdtitle">保留データ一覧</string>
+    <string name="logtitle">編集ログ情報</string>
+    <string name="inputdate">〇〇〇〇/××/△△の形で記入</string>
+    <string name="logback">ログを戻す</string>
+</resources>
