@@ -5,47 +5,128 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ListView
-        android:id="@+id/scheduleList"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/todayListLayout"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/editButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtsche" />
-
-    <TextView
-        android:id="@+id/txtsche"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/sche"
-        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/pastScheduleTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/todayScheduleTitle">
+
+        <ListView
+            android:id="@+id/todayScheduleList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     <ImageButton
-        android:id="@+id/editButton"
+        android:id="@+id/todayEditButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:backgroundTint="#FF9800"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/delButton"
+        app:layout_constraintEnd_toStartOf="@+id/todayDelButton"
+        app:layout_constraintTop_toTopOf="@+id/todayScheduleTitle"
         app:srcCompat="@drawable/edit" />
 
     <ImageButton
-        android:id="@+id/delButton"
+        android:id="@+id/todayDelButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:backgroundTint="#8BC34A"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/todayEditButton"
+        app:srcCompat="@drawable/garbagecan" />
+
+    <ImageButton
+        android:id="@+id/pastEditButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:backgroundTint="#FF9800"
+        app:layout_constraintEnd_toStartOf="@+id/pastDelButton"
+        app:layout_constraintTop_toTopOf="@+id/pastScheduleTitle"
+        app:srcCompat="@drawable/edit" />
+
+    <ImageButton
+        android:id="@+id/pastDelButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
         android:backgroundTint="#8BC34A"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/pastEditButton"
+        app:srcCompat="@drawable/garbagecan" />
+
+    <TextView
+        android:id="@+id/todayScheduleTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sche"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/futureScheduleList" />
+
+    <ImageButton
+        android:id="@+id/futureEditButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="#FF9800"
+        app:layout_constraintEnd_toStartOf="@+id/futureDelButton"
+        app:layout_constraintTop_toTopOf="@+id/futureScheduleTitle"
+        app:srcCompat="@drawable/edit" />
+
+    <ImageButton
+        android:id="@+id/futureDelButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:backgroundTint="#8BC34A"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/futureEditButton"
+        app:srcCompat="@drawable/garbagecan" />
+
+    <TextView
+        android:id="@+id/pastScheduleTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="過去のスケジュール"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/todayListLayout" />
+
+    <ListView
+        android:id="@+id/pastScheduleList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/garbagecan" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pastScheduleTitle" />
+
+    <TextView
+        android:id="@+id/futureScheduleTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="今後のスケジュール"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ListView
+        android:id="@+id/futureScheduleList"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/futureScheduleTitle" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

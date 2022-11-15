@@ -1,6 +1,5 @@
 package and.todo;
 
-import android.app.Dialog;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -14,13 +13,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
@@ -28,7 +23,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentResultListener;
 import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
@@ -54,7 +48,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
     ImageButton bdl,mdl,sdl,schedl,tododl;//各削除ボタン変数
     private boolean progress = false; //進捗モード判定
     DeleteData del = null; //データ削除用クラス
-    int delnum = 0; //データ削除時に配列から消去するための配列インデックス変数
+    int bigDel=0,middleDel=0,smallDel=0,scheDel=0,todoDel=0; //データ削除時に配列から消去するための配列インデックス変数
 
     Spinner bigTarget,middleTarget; //大中目標のスピナー変数
     ListView sList,scheList,todoList; //小目標スケジュールのリスト変数
@@ -136,11 +130,10 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
             ConstraintLayout layout;
             layout = (ConstraintLayout) view.findViewById(R.id.scheduleLayout);
             //スケジュールにデータ設定
-            scheList = view.findViewById(R.id.scheduleList);
+            scheList = view.findViewById(R.id.todayScheduleList);
             scheList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,scheTitle));
             scheList.setOnItemClickListener(new ListSelecter());
 
-            Log.e("SCHE",""+scheData.size());
 
             if(scheData.size()==1){
                 layout.setMinHeight(200);
@@ -373,8 +366,8 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
                 if(judge){ //データ削除成功時、配列からも消す
                     if(dlevel.equals("big")){
-                        bigData.remove(delnum);
-                        bigTitle.remove(delnum);
+                        bigData.remove(bigDel);
+                        bigTitle.remove(bigDel);
                         bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle));
 
                         for(int i=0;i<middleData.size();i++){//中目標のうち削除した大目標が上にあるデータを配列から削除
@@ -383,7 +376,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                                 middleTitle.remove(i);
                                 i--;//削除した分インデックスを戻す
                                 middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
-                                Log.e("MIDDLESIZE",""+middleData.size());
+
                             }
                         }
                         for(int i=0;i<smallData.size();i++){//小目標のうち削除した大目標が上にあるデータを配列から削除
@@ -392,7 +385,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                                 smallTitle.remove(i);
                                 i--;//削除した分インデックスを戻す
                                 sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
-                                Log.e("SMALLSIZE",""+smallData.size());
+
                             }
                         }
                         if(bigData.size()>0){ //大目標が存在するとき
@@ -411,10 +404,10 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                             medit.setEnabled(false); //編集ボタン無効化
                             mdl.setEnabled(false); //削除ボタン無効化
                         }
-                        delnum = 0;
+                        bigDel = 0;
                     }else if(dlevel.equals("middle")){
-                        middleData.remove(delnum);
-                        middleTitle.remove(delnum);
+                        middleData.remove(middleDel);
+                        middleTitle.remove(middleDel);
                         middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
 
                         for(int i=0;i<smallData.size();i++){//小目標のうち削除した中目標が上にあるデータを配列から削除
@@ -434,28 +427,33 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                             medit.setEnabled(false); //編集ボタン無効化
                             mdl.setEnabled(false); //削除ボタン無効化
                         }
-                        delnum = 0;
+                        middleDel = 0;
                     }else if(dlevel.equals("small")){
-                        smallData.remove(delnum);
-                        smallTitle.remove(delnum);
+                        smallData.remove(smallDel);
+                        smallTitle.remove(smallDel);
                         sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
                         sedit.setEnabled(false); //ボタンを無効化
                         sdl.setEnabled(false);
+
+                        smallDel = 0;
                     }else if(dlevel.equals("schedule")){
-                        scheData.remove(delnum);
-                        scheTitle.remove(delnum);
+                        scheData.remove(scheDel);
+                        scheTitle.remove(scheDel);
                         scheList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,scheTitle));
                         scheedit.setEnabled(false);//ボタンを無効化
                         schedl.setEnabled(false);
+
+                        scheDel = 0;
                     }else if(dlevel.equals("todo")){
-                        todoData.remove(delnum);
-                        todoTitle.remove(delnum);
+                        todoData.remove(todoDel);
+                        todoTitle.remove(todoDel);
                         todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
                         todoedit.setEnabled(false);//ボタンを無効化
                         tododl.setEnabled(false);
+
+                        todoDel = 0;
                     }
                 }
-                delnum=0; //削除するデータのインデックスリセット
             }
 
         }
@@ -468,8 +466,8 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
             //項目選択時のIDを取得
             if(adapterView == bigTarget){ //大目標選択時のID取得
                 bid = Integer.parseInt( bigData.get(position).get("id"));
-                delnum = position;
-                if(progress) {
+                bigDel = position;
+                if(progress) { //進捗状況編集モード
 
                     // フラグメントマネージャーを取得
                     FragmentManager fragmentManager = getParentFragmentManager();
@@ -486,7 +484,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 }
             }else if(adapterView == middleTarget){ //中目標選択時のID取得
                 mid = Integer.parseInt( middleData.get(position).get("id"));
-                delnum = position;
+                middleDel = position;
                 if(progress) {
 
                     // フラグメントマネージャーを取得
@@ -517,7 +515,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
             if(adapterView == sList){ //小目標選択時のID取得
                 sid = Integer.parseInt( smallData.get(position).get("id"));
-                delnum = position;
+                smallDel = position;
                 //ToDo 進捗状況入力ダイアログ
                 if(progress) {
 
@@ -538,7 +536,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 sdl.setEnabled(true); //削除ボタン有効化
             }else if(adapterView == scheList){ //スケジュール選択時のID取得
                 scheid = Integer.parseInt( scheData.get(position).get("id"));
-                delnum = position;
+                scheDel = position;
                 if(progress) {
 
                     // フラグメントマネージャーを取得
@@ -558,7 +556,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 schedl.setEnabled(true);
             }else if(adapterView == todoList){ //やることリスト選択時のID取得
                 todoid = Integer.parseInt( todoData.get(position).get("id") );
-                delnum = position;
+                todoDel = position;
                 if(progress) {
 
                     // フラグメントマネージャーを取得
