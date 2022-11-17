@@ -21,9 +21,11 @@ public class DeleteData {
 
     }
 
-    boolean delete(String dlevel,int did){ //データベースから当該データを削除する
-        boolean success = false; //削除の成功判定
+    void delete(String dlevel,int did){ //データベースから当該データを削除する
 
+
+
+        //boolean success = false; //削除の成功判定
         try(SQLiteDatabase db = helper.getWritableDatabase()){
             //トランザクション開始
             db.beginTransaction();
@@ -93,7 +95,7 @@ public class DeleteData {
                 Toast.makeText(activity, "データ削除しました", Toast.LENGTH_SHORT).show();
 
                 //トランザクション成功
-                success = true;
+                //success = true;
                 db.setTransactionSuccessful();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -103,7 +105,7 @@ public class DeleteData {
 
             }
         }
-        return success;
+        //return success;
     }
 
 }

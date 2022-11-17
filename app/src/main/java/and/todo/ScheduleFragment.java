@@ -16,6 +16,7 @@ import android.widget.ListView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -25,7 +26,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 
-public class ScheduleFragment extends Fragment {
+public class ScheduleFragment extends Fragment implements DelDialogFragment.DelDialogListener{
     private ArrayList<HashMap<String,String>> futureScheData = new ArrayList<>();//今後の予定
     private ArrayList<String> futureScheTitle = new ArrayList<>();
     private ArrayList<HashMap<String,String>> todayScheData = new ArrayList<>();//本日の予定
@@ -36,8 +37,9 @@ public class ScheduleFragment extends Fragment {
     private ListView futureList,todayList,pastList;
     private int futureid=0,todayid=0,pastid=0; //選択したID
     private ImageButton futureEdit,futureDel,todayEdit,todayDel,pastEdit,pastDel;
-    DeleteData dl = null; //データ削除用クラス
     int futureDelIndex=0,todayDelIndex=0,pastDelIndex=0;//データ削除時配列からも削除するためのインデックス変数
+    private String dlevel = ""; //削除データの項目変数
+    private int did = 0; //削除データのID変数
 
     public static ScheduleFragment newInstance(Bundle Data){//インスタンス作成時にまず呼び出す
         // インスタンス生成
@@ -64,8 +66,6 @@ public class ScheduleFragment extends Fragment {
         helper = new EditDatabaseHelper(requireActivity());
 
         getSchedule(); //スケジュールデータを取得する
-
-        dl = new DeleteData(requireActivity()); //削除用クラスのインスタンス生成
 
         futureList = view.findViewById(R.id.futureScheduleList); //今後のスケジュールリスト設定
         futureList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,futureScheTitle));
@@ -151,9 +151,52 @@ public class ScheduleFragment extends Fragment {
         pastEdit.setOnClickListener(new editClicker());
     }
 
+    //データ削除確定時の処理
+    @Override
+    public void onDelDialogPositiveClick(DialogFragment dialog) {
+        DeleteData del = new DeleteData(requireActivity()); //削除用クラスのインスタンス生成
+        del.delete("schedule",did);
+
+                if(dlevel.equals("fSchedule")){ //データ削除成功時、配列からも消す
+                        futureScheData.remove(futureDelIndex);
+                        futureScheTitle.remove(futureDelIndex);
+                        futureList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,futureScheTitle));
+                        futureEdit.setEnabled(false);//ボタンを無効化
+                        futureDel.setEnabled(false);
+                    futureDelIndex=0; //削除するデータのインデックスリセット
+
+                }
+               else if(dlevel.equals("tSchedule")){ //データ削除成功時、配列からも消す
+                    todayScheData.remove(todayDelIndex);
+                    todayScheTitle.remove(todayDelIndex);
+                    todayList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todayScheTitle));
+                    todayEdit.setEnabled(false);//ボタンを無効化
+                    todayDel.setEnabled(false);
+                    todayDelIndex=0; //削除するデータのインデックスリセット
+
+                }
+                else if(dlevel.equals("pSchedule")){ //データ削除成功時、配列からも消す
+                    pastScheData.remove(pastDelIndex);
+                    pastScheTitle.remove(pastDelIndex);
+                    pastList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,pastScheTitle));
+                    pastEdit.setEnabled(false);//ボタンを無効化
+                    pastDel.setEnabled(false);
+                    pastDelIndex=0; //削除するデータのインデックスリセット
+
+                }
+    }
+
+    @Override
+    public void onDelDialogNegativeClick(DialogFragment dialog) {
+
+    }
+
+    @Override
+    public void onDelDialogNeutralClick(DialogFragment dialog) {
+
+    }
+
     class editClicker implements View.OnClickListener { //編集ボタンクリックで編集画面へ飛ばす
-        private String dlevel = ""; //削除データの項目変数
-        private int did = 0; //削除データのID変数
 
         Bundle editData = new Bundle(); //データ送信用
         @Override
@@ -207,44 +250,52 @@ public class ScheduleFragment extends Fragment {
                 fragmentTransaction.commit();
 
             }else if(view == futureDel){//今後のスケジュールデータ削除
-                //データベースから削除
-                boolean judge = dl.delete("schedule",futureid);
+                editData.putString("title",futureScheTitle.get(futureDelIndex));
+                editData.putString("level","schedule");
+                dlevel = "fSchedule";
+                did = futureid;
 
-                if(judge){ //データ削除成功時、配列からも消す
-                        futureScheData.remove(futureDelIndex);
-                        futureScheTitle.remove(futureDelIndex);
-                        futureList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,futureScheTitle));
-                        futureEdit.setEnabled(false);//ボタンを無効化
-                        futureDel.setEnabled(false);
+                //ToDo 削除確認ダイアログへ飛ぶ
 
-                }
-                futureDelIndex=0; //削除するデータのインデックスリセット
+                // フラグメントマネージャーを取得
+                FragmentManager fragmentManager = getParentFragmentManager();
+
+                DelDialogFragment dialog = DelDialogFragment.newInstance(editData);
+                dialog.setTargetFragment(ScheduleFragment.this, 0);
+
+                dialog.show(fragmentManager,"dialog_delete");
+
             }else if(view == todayDel){//本日のスケジュールデータ削除
-                //データベースから削除
-                boolean judge = dl.delete("schedule",todayid);
+                editData.putString("title",todayScheTitle.get(todayDelIndex));
+                editData.putString("level","schedule");
+                dlevel = "tSchedule";
+                did = todayid;
+                //ToDo 削除確認ダイアログへ飛ぶ
 
-                if(judge){ //データ削除成功時、配列からも消す
-                    todayScheData.remove(todayDelIndex);
-                    todayScheTitle.remove(todayDelIndex);
-                    todayList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todayScheTitle));
-                    todayEdit.setEnabled(false);//ボタンを無効化
-                    todayDel.setEnabled(false);
+                // フラグメントマネージャーを取得
+                FragmentManager fragmentManager = getParentFragmentManager();
 
-                }
-                todayDelIndex=0; //削除するデータのインデックスリセット
+                DelDialogFragment dialog = DelDialogFragment.newInstance(editData);
+                dialog.setTargetFragment(ScheduleFragment.this, 0);
+
+                dialog.show(fragmentManager,"dialog_delete");
+
             }else if(view == pastDel){//過去のスケジュールデータ削除
-                //データベースから削除
-                boolean judge = dl.delete("schedule",pastid);
 
-                if(judge){ //データ削除成功時、配列からも消す
-                    pastScheData.remove(pastDelIndex);
-                    pastScheTitle.remove(pastDelIndex);
-                    pastList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,pastScheTitle));
-                    pastEdit.setEnabled(false);//ボタンを無効化
-                    pastDel.setEnabled(false);
+                editData.putString("title",pastScheTitle.get(pastDelIndex));
+                editData.putString("level","schedule");
+                dlevel = "pSchedule";
+                did = pastid;
+                //ToDo 削除確認ダイアログへ飛ぶ
 
-                }
-                pastDelIndex=0; //削除するデータのインデックスリセット
+                // フラグメントマネージャーを取得
+                FragmentManager fragmentManager = getParentFragmentManager();
+
+                DelDialogFragment dialog = DelDialogFragment.newInstance(editData);
+                dialog.setTargetFragment(ScheduleFragment.this, 0);
+
+                dialog.show(fragmentManager,"dialog_delete");
+
             }
 
         }

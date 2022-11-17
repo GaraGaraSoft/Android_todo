@@ -59,10 +59,12 @@
 
     <Button
         android:id="@+id/newButton"
-        android:layout_width="65dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#ED80FF"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         android:text="@string/newin"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -146,20 +148,24 @@
 
     <Button
         android:id="@+id/logButton"
-        android:layout_width="65dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#FF5F5F"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         android:text="@string/log"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/newButton" />
 
     <Button
         android:id="@+id/holdButton"
-        android:layout_width="65dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#30A59A"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         android:text="@string/hold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/logButton" />
@@ -265,10 +271,12 @@
 
     <Button
         android:id="@+id/btnFin"
-        android:layout_width="45dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#4295D8"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         android:text="終"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/scheButton" />

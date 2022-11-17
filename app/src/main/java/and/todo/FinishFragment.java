@@ -20,6 +20,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -27,7 +28,7 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class FinishFragment extends Fragment {
+public class FinishFragment extends Fragment  implements DelDialogFragment.DelDialogListener{
     EditDatabaseHelper helper;
     ArrayList<String> bigTitle = new ArrayList<>(); //表示する大目標のタイトルを保管する配列
     ArrayList<HashMap<String,String>> bigData = new ArrayList<>(); //表示する大目標データを保管するための配列
@@ -45,8 +46,10 @@ public class FinishFragment extends Fragment {
     Spinner bigTarget,middleTarget; //大中目標のスピナー変数
     ListView sList,scheList,todoList; //小目標スケジュールのリスト変数
     DeleteData del = null; //データ削除用クラス
+    int bigDel=0,middleDel=0,smallDel=0,scheDel=0,todoDel=0; //データ削除時に配列から消去するための配列インデックス変数
     private boolean progress = false; //進捗モード判定
-    int delnum = 0; //データ削除時に配列から消去するための配列インデックス変数
+    String dlevel; //削除のデータの目標
+    int did=0;//削除するデータのID
 
     public static FinishFragment newInstance(Bundle Data){//インスタンス作成時にまず呼び出す
         // インスタンス生成
@@ -229,18 +232,28 @@ public class FinishFragment extends Fragment {
                 editData.putString("level","todo");
                 editData.putInt("id",todoid);
             }else if(view == bdl){//大目標の削除ボタン
+                editData.putString("title",bigTitle.get(bigDel));
+                editData.putString("level","big");
                 dlevel = "big";
                 did = bid;
             }else if(view == mdl){//中目標の削除ボタン
+                editData.putString("title",middleTitle.get(middleDel));
+                editData.putString("level","middle");
                 dlevel = "middle";
                 did = mid;
             }else if(view == sdl){//小目標の削除ボタン
+                editData.putString("title",smallTitle.get(smallDel));
+                editData.putString("level","small");
                 dlevel = "small";
                 did = sid;
             }else if(view == schedl){//スケジュールの削除ボタン
+                editData.putString("title",scheTitle.get(scheDel));
+                editData.putString("level","schedule");
                 dlevel = "schedule";
                 did = scheid;
             }else if(view == tododl){//やることリスト削除ボタン
+                editData.putString("title",todoTitle.get(todoDel));
+                editData.putString("level","todo");
                 dlevel = "todo";
                 did = todoid;
             }
@@ -260,94 +273,16 @@ public class FinishFragment extends Fragment {
                 fragmentTransaction.commit();
 
             }else if(view == bdl || view == mdl || view == sdl || view == schedl || view == tododl){
-                //データベースから削除
-                boolean judge = del.delete(dlevel,did);
+                //ToDo 削除確認ダイアログへ飛ぶ
 
-                if(judge){ //データ削除成功時、配列からも消す
-                    if(dlevel.equals("big")){
-                        bigData.remove(delnum);
-                        bigTitle.remove(delnum);
-                        bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle));
+                // フラグメントマネージャーを取得
+                FragmentManager fragmentManager = getParentFragmentManager();
 
-                        for(int i=0;i<middleData.size();i++){//中目標のうち削除した大目標が上にあるデータを配列から削除
-                            if(bid == Integer.parseInt(middleData.get(i).get("big"))){
-                                middleData.remove(i);
-                                middleTitle.remove(i);
-                                i--;//削除した分インデックスを戻す
-                                middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+                DelDialogFragment dialog = DelDialogFragment.newInstance(editData);
+                dialog.setTargetFragment(FinishFragment.this, 0);
 
-                            }
-                        }
-                        for(int i=0;i<smallData.size();i++){//小目標のうち削除した大目標が上にあるデータを配列から削除
-                            if(bid == Integer.parseInt(smallData.get(i).get("big"))){
-                                smallData.remove(i);
-                                smallTitle.remove(i);
-                                i--;//削除した分インデックスを戻す
-                                sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
+                dialog.show(fragmentManager,"dialog_delete");
 
-                            }
-                        }
-                        if(bigData.size()>0){ //大目標が存在するとき
-                            bigTarget.setSelection(0);
-                            bid = Integer.parseInt(bigData.get(0).get("id")); //大目標IDを初期状態に
-                        }else{//大目標が存在しないとき
-                            bid = 0;
-                            bedit.setEnabled(false); //編集ボタン無効化
-                            bdl.setEnabled(false); //削除ボタン無効化
-                        }
-                        if(middleData.size()>0){ //中目標が存在するとき
-                            middleTarget.setSelection(0);
-                            mid = Integer.parseInt(middleData.get(0).get("id")); //中目標を初期状態に
-                        }else{//中目標が存在しないとき
-                            mid = 0;
-                            medit.setEnabled(false); //編集ボタン無効化
-                            mdl.setEnabled(false); //削除ボタン無効化
-                        }
-                        delnum = 0;
-                    }else if(dlevel.equals("middle")){
-                        middleData.remove(delnum);
-                        middleTitle.remove(delnum);
-                        middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
-
-                        for(int i=0;i<smallData.size();i++){//小目標のうち削除した中目標が上にあるデータを配列から削除
-                            if(mid == Integer.parseInt(smallData.get(i).get("middle"))){
-                                smallData.remove(i);
-                                smallTitle.remove(i);
-                                i--;//削除した分インデックスを戻す
-                                sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
-
-                            }
-                        }
-                        if(middleData.size()>0){ //中目標が存在するとき
-                            middleTarget.setSelection(0);
-                            mid = Integer.parseInt(middleData.get(0).get("id")); //中目標を初期状態に
-                        }else{//中目標が存在しないとき
-                            mid = 0;
-                            medit.setEnabled(false); //編集ボタン無効化
-                            mdl.setEnabled(false); //削除ボタン無効化
-                        }
-                        delnum = 0;
-                    }else if(dlevel.equals("small")){
-                        smallData.remove(delnum);
-                        smallTitle.remove(delnum);
-                        sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
-                        sedit.setEnabled(false); //ボタンを無効化
-                        sdl.setEnabled(false);
-                    }else if(dlevel.equals("schedule")){
-                        scheData.remove(delnum);
-                        scheTitle.remove(delnum);
-                        scheList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,scheTitle));
-                        scheedit.setEnabled(false);//ボタンを無効化
-                        schedl.setEnabled(false);
-                    }else if(dlevel.equals("todo")){
-                        todoData.remove(delnum);
-                        todoTitle.remove(delnum);
-                        todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
-                        todoedit.setEnabled(false);//ボタンを無効化
-                        tododl.setEnabled(false);
-                    }
-                }
-                delnum=0; //削除するデータのインデックスリセット
             }
 
         }
@@ -361,7 +296,7 @@ public class FinishFragment extends Fragment {
             //項目選択時のIDを取得
             if(adapterView == bigTarget){ //大目標選択時のID取得
                 bid = Integer.parseInt( bigData.get(position).get("id"));
-                delnum = position;
+                bigDel = position;
                 if(progress) {
 
                     // フラグメントマネージャーを取得
@@ -379,7 +314,7 @@ public class FinishFragment extends Fragment {
                 }
             }else if(adapterView == middleTarget){ //中目標選択時のID取得
                 mid = Integer.parseInt( middleData.get(position).get("id"));
-                delnum = position;
+                middleDel = position;
                 if(progress) {
 
                     // フラグメントマネージャーを取得
@@ -410,7 +345,7 @@ public class FinishFragment extends Fragment {
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
             if(adapterView == sList){ //小目標選択時のID取得
                 sid = Integer.parseInt( smallData.get(position).get("id"));
-                delnum = position;
+                smallDel = position;
                 //ToDo 進捗状況入力ダイアログ
                 if(progress) {
 
@@ -431,7 +366,7 @@ public class FinishFragment extends Fragment {
                 sdl.setEnabled(true); //削除ボタン有効化
             }else if(adapterView == scheList){ //スケジュール選択時のID取得
                 scheid = Integer.parseInt( scheData.get(position).get("id"));
-                delnum = position;
+                scheDel = position;
                 if(progress) {
 
                     // フラグメントマネージャーを取得
@@ -451,7 +386,7 @@ public class FinishFragment extends Fragment {
                 schedl.setEnabled(true);
             }else if(adapterView == todoList){ //やることリスト選択時のID取得
                 todoid = Integer.parseInt( todoData.get(position).get("id") );
-                delnum = position;
+                todoDel = position;
                 if(progress) {
 
                     // フラグメントマネージャーを取得
@@ -471,6 +406,109 @@ public class FinishFragment extends Fragment {
                 tododl.setEnabled(true);
             }
         }
+    }
+
+    //データ削除確定時の処理
+    @Override
+    public void onDelDialogPositiveClick(DialogFragment dialog) {
+        DeleteData del = new DeleteData(requireActivity()); //削除用クラスのインスタンス生成
+        del.delete(dlevel,did);
+
+        if(dlevel.equals("big")){
+            bigData.remove(bigDel);
+            bigTitle.remove(bigDel);
+            bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle));
+
+            for(int i=0;i<middleData.size();i++){//中目標のうち削除した大目標が上にあるデータを配列から削除
+                if(bid == Integer.parseInt(middleData.get(i).get("big"))){
+                    middleData.remove(i);
+                    middleTitle.remove(i);
+                    i--;//削除した分インデックスを戻す
+                    middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+
+                }
+            }
+            for(int i=0;i<smallData.size();i++){//小目標のうち削除した大目標が上にあるデータを配列から削除
+                if(bid == Integer.parseInt(smallData.get(i).get("big"))){
+                    smallData.remove(i);
+                    smallTitle.remove(i);
+                    i--;//削除した分インデックスを戻す
+                    sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
+
+                }
+            }
+            if(bigData.size()>0){ //大目標が存在するとき
+                bigTarget.setSelection(0);
+                bid = Integer.parseInt(bigData.get(0).get("id")); //大目標IDを初期状態に
+            }else{//大目標が存在しないとき
+                bid = 0;
+                bedit.setEnabled(false); //編集ボタン無効化
+                bdl.setEnabled(false); //削除ボタン無効化
+            }
+            if(middleData.size()>0){ //中目標が存在するとき
+                middleTarget.setSelection(0);
+                mid = Integer.parseInt(middleData.get(0).get("id")); //中目標を初期状態に
+            }else{//中目標が存在しないとき
+                mid = 0;
+                medit.setEnabled(false); //編集ボタン無効化
+                mdl.setEnabled(false); //削除ボタン無効化
+            }
+            bigDel = 0;
+        }else if(dlevel.equals("middle")){
+            middleData.remove(middleDel);
+            middleTitle.remove(middleDel);
+            middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+
+            for(int i=0;i<smallData.size();i++){//小目標のうち削除した中目標が上にあるデータを配列から削除
+                if(mid == Integer.parseInt(smallData.get(i).get("middle"))){
+                    smallData.remove(i);
+                    smallTitle.remove(i);
+                    i--;//削除した分インデックスを戻す
+                    sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
+
+                }
+            }
+            if(middleData.size()>0){ //中目標が存在するとき
+                middleTarget.setSelection(0);
+                mid = Integer.parseInt(middleData.get(0).get("id")); //中目標を初期状態に
+            }else{//中目標が存在しないとき
+                mid = 0;
+                medit.setEnabled(false); //編集ボタン無効化
+                mdl.setEnabled(false); //削除ボタン無効化
+            }
+            middleDel = 0;
+        }else if(dlevel.equals("small")){
+            smallData.remove(smallDel);
+            smallTitle.remove(smallDel);
+            sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
+            sedit.setEnabled(false); //ボタンを無効化
+            sdl.setEnabled(false);
+            smallDel = 0;
+        }else if(dlevel.equals("schedule")){
+            scheData.remove(scheDel);
+            scheTitle.remove(scheDel);
+            scheList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,scheTitle));
+            scheedit.setEnabled(false);//ボタンを無効化
+            schedl.setEnabled(false);
+            scheDel = 0;
+        }else if(dlevel.equals("todo")){
+            todoData.remove(todoDel);
+            todoTitle.remove(todoDel);
+            todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
+            todoedit.setEnabled(false);//ボタンを無効化
+            tododl.setEnabled(false);
+            todoDel=0; //削除するデータのインデックスリセット
+        }
+
+
+    }
+    //データ削除キャンセル時
+    @Override
+    public void onDelDialogNegativeClick(DialogFragment dialog) {
+    }
+    //データ削除スルー
+    @Override
+    public void onDelDialogNeutralClick(DialogFragment dialog) {
     }
 
 
