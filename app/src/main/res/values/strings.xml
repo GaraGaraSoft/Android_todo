@@ -22,14 +22,6 @@
         <item>スケジュール</item>
         <item>やること</item>
     </string-array>
-    <string-array name="sample_big">
-        <item>big1</item>
-        <item>big2</item>
-    </string-array>
-    <string-array name="sample_middle">
-        <item>middle1</item>
-        <item>middle2</item>
-    </string-array>
     <string name="date">日付を入力</string>
     <string name="datePickup">日付選択</string>
     <string name="newin">新規</string>
@@ -43,6 +35,7 @@
     <string name="holdon">保留状態</string>
     <string name="holdtitle">保留データ一覧</string>
     <string name="logtitle">編集ログ情報</string>
+    <string name="logNum">ログ(No.%d～No.%d)まで表示</string>
     <string name="inputdate">〇〇〇〇/××/△△の形で記入</string>
     <string name="logback">ログを戻す</string>
 </resources>

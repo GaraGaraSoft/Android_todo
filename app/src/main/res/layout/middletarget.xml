@@ -18,7 +18,6 @@
         android:id="@+id/mSpin"
         android:layout_width="409dp"
         android:layout_height="wrap_content"
-        android:entries="@array/sample_middle"
         android:minHeight="45sp" />
 
 </LinearLayout>

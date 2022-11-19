@@ -86,7 +86,9 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
         //ToDo 下のボタン一覧編集
         //ToDo 内容編集機能
-        //ToDo
+        //ToDo　Listの最大数と複数ページに変更
+        //ToDo　最初の数十件以降はスクロールしたら読み込み
+        //ToDo ログ情報をページで分割
 
         //Bundleデータ取得
         Bundle Data = getArguments();

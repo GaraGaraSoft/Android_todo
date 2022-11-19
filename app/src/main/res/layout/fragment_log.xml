@@ -20,7 +20,8 @@
         android:id="@+id/logList"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/logBack"
+        android:layout_marginBottom="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/logNum"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtLog" />
@@ -29,9 +30,66 @@
         android:id="@+id/logBack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
         android:backgroundTint="#00BCD4"
         android:text="@string/logback"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/last"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:text="LAST"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/forward" />
+
+    <Button
+        android:id="@+id/forward"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:text="▶"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/previous" />
+
+    <Button
+        android:id="@+id/first"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:text="FIRST"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/previous"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:text="◀"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/first" />
+
+    <TextView
+        android:id="@+id/logNum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:text="@string/logNum"
+        app:layout_constraintBottom_toTopOf="@+id/logBack"
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
