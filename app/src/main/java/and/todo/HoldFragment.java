@@ -1,16 +1,15 @@
 package and.todo;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -18,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -44,11 +44,12 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
     int bigDel=0,middleDel=0,smallDel=0,scheDel=0,todoDel=0; //データ削除時に配列から消去するための配列インデックス変数
     private int did;
     private String dlevel;
+    private boolean content = false;
 
     //データ渡し用のBundleデータ
     Bundle sendData;
 
-    Spinner bigTarget,middleTarget; //大中目標のスピナー変数
+    CustomSpinner bigTarget,middleTarget; //大中目標のスピナー変数
     ListView sList,scheList,todoList; //小目標スケジュールのリスト変数
 
 
@@ -86,7 +87,7 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         del = new DeleteData(requireActivity()); //削除用クラスのインスタンス生成
 
         //大目標にデータ設定
-        bigTarget = (Spinner) view.findViewById(R.id.bigTarget);
+        bigTarget = (CustomSpinner) view.findViewById(R.id.bigTarget);
         ArrayAdapter<String> bAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
         bigTarget.setAdapter(bAdapter);
         bigTarget.setOnItemSelectedListener(new HoldFragment.SpinSelecter());
@@ -95,7 +96,7 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         }
 
         //中目標にデータ設定
-        middleTarget = (Spinner) view.findViewById(R.id.middleTarget);
+        middleTarget = (CustomSpinner) view.findViewById(R.id.middleTarget);
         ArrayAdapter<String> mAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
         middleTarget.setAdapter(mAdapter);
         middleTarget.setOnItemSelectedListener(new HoldFragment.SpinSelecter());
@@ -112,6 +113,31 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         todoList = view.findViewById(R.id.todoList);
         todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
         todoList.setOnItemClickListener(new HoldFragment.ListSelecter());
+
+
+        CustomSpinner cspinner = view.findViewById(R.id.modeChange); //編集モード選択スピナー取得
+        String[] spinnerItems = { "標準モード", "内容表示モード" };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(),
+                android.R.layout.simple_spinner_item,
+                spinnerItems);
+        cspinner.setAdapter(adapter);
+        cspinner.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener(){
+
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) { //大目標選択時のID取得
+                if(position==0){ //標準モード（選択しても表示されない）
+                    content = false;
+                }else{ //内容表示モード（項目の内容をトースト表示）
+                    content = true;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
 
         //各編集ボタン要素を取得
         bedit = (ImageButton) view.findViewById(R.id.BeditButton);
@@ -242,9 +268,15 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
             if(adapterView == bigTarget){ //大目標選択時のID取得
                 bid = Integer.parseInt( bigData.get(position).get("id"));
                 bigDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),bigData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
             }else if(adapterView == middleTarget){ //中目標選択時のID取得
                 mid = Integer.parseInt( middleData.get(position).get("id"));
                 middleDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),middleData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
             }
         }
 
@@ -261,11 +293,17 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
             if(adapterView == sList){ //小目標選択時のID取得
                 sid = Integer.parseInt( smallData.get(position).get("id"));
                 smallDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
                 sedit.setEnabled(true); //編集ボタン有効化
                 sdl.setEnabled(true); //削除ボタン有効化
             }else if(adapterView == todoList){ //やることリスト選択時のID取得
                 todoid = Integer.parseInt( todoData.get(position).get("id") );
                 todoDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
                 todoedit.setEnabled(true);
                 tododl.setEnabled(true);
             }
@@ -292,8 +330,8 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
 
                     //中目標を取得
                     String[] mcols = {"id","title","big","bigtitle","bighold","content","hold","important","memo","proceed","fin"};//SQLデータから取得する列
-                    String[] mlevel = { "middle" };//中目標のみを抽出
-                    Cursor mcs = db.query("ToDoData",mcols,"level=?",mlevel,null,null,null,null);
+                    String[] mlevel = { "middle","0" };//中目標,未完了を抽出
+                    Cursor mcs = db.query("ToDoData",mcols,"level=? and fin=?",mlevel,null,null,null,null);
 
                     middleData.clear(); //いったん配列を空にする
                     middleTitle.clear();
@@ -334,8 +372,8 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
 
                     //小目標を取得
                     String[] scols = {"id","title","big","bigtitle","bighold","middle","middletitle","middlehold","content","important","memo","proceed","fin"};//SQLデータから取得する列
-                    String[] slevel = { "small","1" };//小目標のみを抽出
-                    Cursor scs = db.query("ToDoData",scols,"level=? and hold=?",slevel,null,null,null,null);
+                    String[] slevel = { "small","1","0" };//小目標,保留中,未完了を抽出
+                    Cursor scs = db.query("ToDoData",scols,"level=? and hold=? and fin=?",slevel,null,null,null,null);
 
                     smallData.clear(); //いったん配列を空にする
                     smallTitle.clear();
@@ -432,8 +470,8 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
 
                     //小目標を取得
                     String[] scols = {"id","title","big","bigtitle","bighold","middle","middletitle","middlehold","content","important","memo","proceed","fin"};//SQLデータから取得する列
-                    String[] slevel = { "small","1" };//小目標のみを抽出
-                    Cursor scs = db.query("ToDoData",scols,"level=? and hold=?",slevel,null,null,null,null);
+                    String[] slevel = { "small","1","0" };//小目標のみ,保留中,未完了を抽出
+                    Cursor scs = db.query("ToDoData",scols,"level=? and hold=? and fin=?",slevel,null,null,null,null);
 
                     smallData.clear(); //いったん配列を空にする
                     smallTitle.clear();
@@ -543,8 +581,8 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
                 //大目標を取得
 
                 String[] bcols = {"id","title","content","hold","important","memo","proceed","fin"};//SQLデータから取得する列
-                String[] blevel = { "big" };//大目標を抽出
-                Cursor bcs = db.query("ToDoData",bcols,"level=?",blevel,null,null,null,null);
+                String[] blevel = { "big","0" };//大目標を抽出
+                Cursor bcs = db.query("ToDoData",bcols,"level=? and fin=?",blevel,null,null,null,null);
 
                 bigData.clear(); //いったん配列を空にする
                 bigTitle.clear();
@@ -568,8 +606,8 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
 
                 //中目標を取得
                 String[] mcols = {"id","title","big","bigtitle","bighold","content","hold","important","memo","proceed","fin"};//SQLデータから取得する列
-                String[] mlevel = { "middle" };//中目標のみを抽出
-                Cursor mcs = db.query("ToDoData",mcols,"level=?",mlevel,null,null,null,null);
+                String[] mlevel = { "middle","0" };//中目標のみを抽出
+                Cursor mcs = db.query("ToDoData",mcols,"level=? and fin=?",mlevel,null,null,null,null);
 
                 middleData.clear(); //いったん配列を空にする
                 middleTitle.clear();
@@ -609,8 +647,8 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
 
                 //小目標を取得
                 String[] scols = {"id","title","big","bigtitle","bighold","middle","middletitle","middlehold","content","important","memo","proceed","fin"};//SQLデータから取得する列
-                String[] slevel = { "small","1" };//小目標のみを抽出
-                Cursor scs = db.query("ToDoData",scols,"level=? and hold=?",slevel,null,null,null,null);
+                String[] slevel = { "small","1","0" };//小目標のみを抽出
+                Cursor scs = db.query("ToDoData",scols,"level=? and hold=? and fin=?",slevel,null,null,null,null);
 
                 smallData.clear(); //いったん配列を空にする
                 smallTitle.clear();
@@ -666,8 +704,8 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
 
                 //やることリストを取得
                 String[] todocols = {"id","title","content","important","memo","proceed","fin"};//SQLデータから取得する列
-                String[] todolevel = { "todo","1" };//やることリストのみを抽出
-                Cursor todocs = db.query("ToDoData",todocols,"level=? and hold=?",todolevel,null,null,null,null);
+                String[] todolevel = { "todo","1","0" };//やることリストのみを抽出
+                Cursor todocs = db.query("ToDoData",todocols,"level=? and hold=? and fin=?",todolevel,null,null,null,null);
 
                 todoData.clear(); //いったん配列を空にする
                 todoTitle.clear();

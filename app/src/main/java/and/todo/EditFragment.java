@@ -18,6 +18,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,6 +66,8 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
     private ContentValues lcv;
     private boolean dateok = false;
     private EditText editTitle;
+    //データ渡し用のBundleデータ
+    Bundle sendData;
 
     EditText editdate = null;
     TextView txtCheck = null;
@@ -136,6 +140,7 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
                 hold = 0;
             }
         });
+
 
         //編集完了ボタン取得
         editBtn = (Button) view.findViewById(R.id.EditDone);

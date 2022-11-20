@@ -88,23 +88,30 @@ public class ProgressDialogFragment extends DialogFragment {
 
         CheckBox chkFin = layout.findViewById(R.id.chkFin);//終了
         fin = data.getInt("editFin");
+        if(fin==1) //完了変数設定時チェック
+            chkFin.setChecked(true);
         chkFin.setOnCheckedChangeListener((buttonView, isChecked)-> {
                 fin = isChecked ? 1:0;
         });
 
         Dialog dialog = new AlertDialog.Builder(activity)
-                .setTitle("の進捗状況")
+                .setTitle(data.getString("editTitle")+"の進捗状況")
                 .setView(layout)
                 .setPositiveButton("OK",(d,w)->{
                     //ToDo 編集内容をTopへ戻す
 
                     if(seekProg.getProgress()==100){ //達成率100のとき完了状態にする
                         fin = 1;
+                    }else{
+                        fin = 0;
                     }
 
                     Bundle result = new Bundle();
                     result.putString("editcontent",editProgCon.getText().toString());
-                    result.putInt("editProg", seekProg.getProgress() );
+                    if(fin == 0)
+                        result.putInt("editProg", seekProg.getProgress() );
+                    else //finチェック時進捗度100にする
+                        result.putInt("editProg",100);
                     result.putInt("id",data.getInt("id"));
                     result.putInt("fin",fin);
                     //result.putInt("editFin",);

@@ -1,6 +1,7 @@
 package and.todo;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,11 +12,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,14 +28,19 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 
-public class FinishFragment extends Fragment  implements DelDialogFragment.DelDialogListener{
+public class FinishFragment extends Fragment  implements ProgressDialogFragment.ProgressDialogListener,DelDialogFragment.DelDialogListener{
     EditDatabaseHelper helper;
     ArrayList<String> bigTitle = new ArrayList<>(); //表示する大目標のタイトルを保管する配列
     ArrayList<HashMap<String,String>> bigData = new ArrayList<>(); //表示する大目標データを保管するための配列
+    ArrayList<HashMap<String,String>> nonBigData = new ArrayList<>();//非完了タスクの大目標データを保管する配列
     ArrayList<String> middleTitle = new ArrayList<>();//表示する中目標のタイトルを保管する配列
     ArrayList<HashMap<String,String>> middleData = new ArrayList<>();//表示する中目標データを保管するための配列
+    ArrayList<String> nonMiddleTitle = new ArrayList<>();
+    ArrayList<HashMap<String,String>> nonMiddleData = new ArrayList<>(); //非完了タスクの中目標データを保管する配列
     ArrayList<String> smallTitle = new ArrayList<>();
     ArrayList<HashMap<String,String>> smallData = new ArrayList<>();//表示する小目標データを保管するための配列
     ArrayList<String> scheTitle = new ArrayList<>();
@@ -43,13 +50,16 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
     int bid=0,mid=0,sid=0,scheid=0,todoid=0;//項目選択時のID保管用変数
     ImageButton bedit,medit,sedit,scheedit,todoedit;//各編集ボタン変数
     ImageButton bdl,mdl,sdl,schedl,tododl;//各削除ボタン変数
-    Spinner bigTarget,middleTarget; //大中目標のスピナー変数
+    CustomSpinner bigTarget,middleTarget; //大中目標のスピナー変数
     ListView sList,scheList,todoList; //小目標スケジュールのリスト変数
     DeleteData del = null; //データ削除用クラス
     int bigDel=0,middleDel=0,smallDel=0,scheDel=0,todoDel=0; //データ削除時に配列から消去するための配列インデックス変数
     private boolean progress = false; //進捗モード判定
+    private boolean content = false; //内容表示モード判定
     String dlevel; //削除のデータの目標
     int did=0;//削除するデータのID
+    private int progressLevel = 0;//進捗編集した項目判定変数
+    private Bundle sendData;
 
     public static FinishFragment newInstance(Bundle Data){//インスタンス作成時にまず呼び出す
         // インスタンス生成
@@ -89,20 +99,85 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
         del = new DeleteData(requireActivity()); //削除用クラスのインスタンス生成
 
         //大目標にデータ設定
-        bigTarget = (Spinner) view.findViewById(R.id.bigTarget);
+        bigTarget = (CustomSpinner) view.findViewById(R.id.bigTarget);
         ArrayAdapter<String> bAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
         bigTarget.setAdapter(bAdapter);
-        bigTarget.setOnItemSelectedListener(new SpinSelecter());
+        bigTarget.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener(){
+
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) { //大目標選択時のID取得
+                bid = Integer.parseInt( bigData.get(position).get("id"));
+                bigDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),bigData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
+                if(progress) {
+                    progressLevel = 1;
+
+                    // フラグメントマネージャーを取得
+                    FragmentManager fragmentManager = getParentFragmentManager();
+
+                    Bundle data = new Bundle();
+                    data.putString("editcontent", bigData.get(position).get("memo"));
+                    data.putInt("editProg", Integer.parseInt(bigData.get(position).get("proceed")));
+                    data.putInt("editFin", Integer.parseInt(bigData.get(position).get("fin")));
+                    data.putInt("id", bid);
+                    data.putString("editTitle", bigTitle.get(position));
+                    ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
+                    dialog.setTargetFragment(FinishFragment.this, 0);
+
+                    dialog.show(fragmentManager,"dialog_progress");
+                }
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         if(bigData.size()>0) { //大目標が１つ以上あるときの初期設定
             bid = Integer.parseInt(bigData.get(0).get("id")); //大目標の初期位置ID
         }
 
 
         //中目標にデータ設定
-        middleTarget = (Spinner) view.findViewById(R.id.middleTarget);
+        middleTarget = (CustomSpinner) view.findViewById(R.id.modeChange);
         ArrayAdapter<String> mAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
         middleTarget.setAdapter(mAdapter);
-        middleTarget.setOnItemSelectedListener(new SpinSelecter());
+        middleTarget.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener(){
+
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {//中目標選択時のID取得
+                mid = Integer.parseInt( middleData.get(position).get("id"));
+                middleDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),middleData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
+                if(progress) {
+                    progressLevel = 2;
+                    // フラグメントマネージャーを取得
+                    FragmentManager fragmentManager = getParentFragmentManager();
+
+                    Bundle data = new Bundle();
+                    data.putString("editcontent", middleData.get(position).get("memo"));
+                    data.putInt("editProg", Integer.parseInt(middleData.get(position).get("proceed")));
+                    data.putInt("editFin", Integer.parseInt(middleData.get(position).get("fin")));
+                    data.putInt("id", mid);
+                    data.putString("editTitle", middleTitle.get(position));
+                    ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
+                    dialog.setTargetFragment(FinishFragment.this, 0);
+
+                    dialog.show(fragmentManager,"dialog_progress");
+                }
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         if(middleData.size()>0) { //中目標が１つ以上あるときの初期設定
             mid = Integer.parseInt(middleData.get(0).get("id")); //中目標の初期位置ID
         }
@@ -128,8 +203,6 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
             scheList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,scheTitle));
             scheList.setOnItemClickListener(new ListSelecter());
 
-            Log.e("SCHE",""+scheData.size());
-
             if(scheData.size()==1){
                 layout.setMinHeight(200);
             }else if(scheData.size()==2){
@@ -153,6 +226,35 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
         todoList = view.findViewById(R.id.todoList);
         todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
         todoList.setOnItemClickListener(new ListSelecter());
+
+
+        CustomSpinner cspinner = view.findViewById(R.id.modeChange); //編集モード選択スピナー取得
+        String[] spinnerItems = { "標準モード", "内容表示モード", "進捗編集モード" };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(),
+                android.R.layout.simple_spinner_item,
+                spinnerItems);
+        cspinner.setAdapter(adapter);
+        cspinner.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener(){
+
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) { //大目標選択時のID取得
+                if(position==0){ //標準モード（選択しても表示されない）
+                    content = false;
+                    progress = false;
+                }else if(position==1){ //内容表示モード（項目の内容をトースト表示）
+                    content = true;
+                    progress = false;
+                }else{//進捗編集モード（選択した項目の進捗状況を編集）
+                    content = false;
+                    progress = true;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         //各編集ボタン要素を取得
         bedit = (ImageButton) view.findViewById(R.id.BeditButton);
@@ -200,14 +302,466 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
         sdl.setOnClickListener(new editClicker());
         tododl.setOnClickListener(new editClicker());
 
-        CheckBox chkProgress = view.findViewById(R.id.checkProgress);
-        chkProgress.setOnCheckedChangeListener((buttonView,ischecked)->{
-            progress = ischecked; //チェック時には進捗編集モードにする
-        });
-
-
     }
 
+
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog,Bundle data) {
+
+        String memo = data.getString("editcontent");
+        int proceed = data.getInt("editProg");
+        int id = data.getInt("id");
+        int fin = data.getInt("fin");
+
+        ContentValues logcv = new ContentValues(); //ログ情報用のContentValues
+        ContentValues cv = new ContentValues();
+        try(SQLiteDatabase db = helper.getReadableDatabase()){
+            Cursor cs = db.query("ToDoData",null,"id=?",new String[]{""+id},null,null,null,null );
+
+            int ltitle = cs.getColumnIndex("title");
+            int lcontent = cs.getColumnIndex("content");
+            int llevel = cs.getColumnIndex("level");
+            int lbig = cs.getColumnIndex("big");
+            int lbigtitle = cs.getColumnIndex("bigtitle");
+            int lbighold = cs.getColumnIndex("bighold");
+            int lmiddle = cs.getColumnIndex("middle");
+            int lmiddletitle = cs.getColumnIndex("middletitle");
+            int lmiddlehold = cs.getColumnIndex("middlehold");
+            int ldate = cs.getColumnIndex("date");
+            int lhold = cs.getColumnIndex("hold");
+            int limportant = cs.getColumnIndex("important");
+            int lmemo = cs.getColumnIndex("memo");
+            int lproceed = cs.getColumnIndex("proceed");
+            int lfin = cs.getColumnIndex("fin");
+
+            if(cs.moveToFirst()){
+                cv.put("id", id);
+                cv.put("title",cs.getString(ltitle));
+                cv.put("level",cs.getString(llevel));
+                cv.put("hold",cs.getInt(lhold));
+                cv.put("big",cs.getInt(lbig));
+                cv.put("bigtitle",cs.getString(lbigtitle));
+                cv.put("bighold",cs.getInt(lbighold));
+                cv.put("middle",cs.getInt(lmiddle));
+                cv.put("middletitle",cs.getString(lmiddletitle));
+                cv.put("middlehold",cs.getInt(lmiddlehold));
+                cv.put("date",cs.getString(ldate));
+                cv.put("content",cs.getString(lcontent));
+                cv.put("important",cs.getInt(limportant));
+                cv.put("memo", memo);
+                cv.put("proceed", proceed);
+                cv.put("fin",fin);
+                logcv.put("id",id);
+                logcv.put("ope","update");
+                logcv.put("beforetitle",cs.getString(ltitle));
+                logcv.put("beforelevel",cs.getString(llevel));
+                logcv.put("beforehold",cs.getInt(lhold));
+                logcv.put("beforebig",cs.getInt(lbig));
+                logcv.put("beforebigtitle",cs.getString(lbigtitle));
+                logcv.put("beforebighold",cs.getInt(lbighold));
+                logcv.put("beforemiddle",cs.getInt(lmiddle));
+                logcv.put("beforemiddletitle",cs.getString(lmiddletitle));
+                logcv.put("beforemiddlehold",cs.getInt(lmiddlehold));
+                logcv.put("beforedate",cs.getString(ldate));
+                logcv.put("beforecontent",cs.getString(lcontent));
+                logcv.put("beforeimportant",cs.getInt(limportant));
+                logcv.put("beforememo",cs.getString(lmemo));
+                logcv.put("beforeproceed",cs.getString(lproceed));
+                logcv.put("beforefin",cs.getString(lfin));
+                logcv.put("aftertitle",cs.getString(ltitle));
+                logcv.put("afterlevel",cs.getString(llevel));
+                logcv.put("afterhold",""+cs.getInt(lhold));
+                logcv.put("afterbig",cs.getInt(lbig));
+                logcv.put("afterbigtitle",cs.getString(lbigtitle));
+                logcv.put("afterbighold",cs.getInt(lbighold));
+                logcv.put("aftermiddle",cs.getInt(lmiddle));
+                logcv.put("aftermiddletitle",cs.getString(lmiddletitle));
+                logcv.put("aftermiddlehold",cs.getInt(lmiddlehold));
+                logcv.put("afterdate",cs.getString(ldate));
+                logcv.put("aftercontent",cs.getString(lcontent));
+                logcv.put("afterimportant",cs.getInt(limportant));
+                logcv.put("aftermemo",memo);
+                logcv.put("afterproceed",proceed);
+                logcv.put("afterfin",fin);
+
+            }
+        }
+
+        //データベースに反映
+        try(SQLiteDatabase db = helper.getWritableDatabase()) {
+            db.beginTransaction();
+            try {
+                db.insertWithOnConflict("ToDoData", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+
+                if(progressLevel==1 && fin == 1){ //大目標完了時下の中小目標も完了にする
+
+                    cv = new ContentValues();
+                    cv.put("proceed",100);
+                    cv.put("fin",1);
+                    db.update("ToDoData",cv,"big=?",new String[]{""+id});
+
+                }else if(progressLevel==2 && fin==1){//中目標完了時下の小目標も完了にする
+
+                    cv = new ContentValues();
+                    cv.put("proceed",100);
+                    cv.put("fin",1);
+                    db.update("ToDoData",cv,"middle=?",new String[]{""+id});
+                }
+
+                db.insert("LogData",null,logcv);
+
+
+                Cursor lcs = db.query("LogData",new String[]{"logid"},null,null,null,null,null,null);
+                if(lcs.getCount()>300){ //ログ件数が３００件を超えたら古いのから削除
+                    String dsql = "delete from LogData order by logid asc limit "+(lcs.getCount()-300);
+                    db.execSQL(dsql);
+                }
+
+                db.setTransactionSuccessful();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                db.endTransaction();
+            }
+        }
+        if(progressLevel == 1){ //大目標進捗編集時データ配列を再読み込み
+
+            try(SQLiteDatabase db = helper.getReadableDatabase()){
+                //トランザクション開始
+                db.beginTransaction();
+                try{
+                    //大目標を取得
+
+                    String[] bcols = {"id","title","content","important","memo","proceed","fin"};//SQLデータから取得する列
+                    String[] blevel = { "big","0","1" };//大目標、保留なし,終了データのみを抽出
+                    Cursor bcs = db.query("ToDoData",bcols,"level=? and hold=? and fin=?",blevel,null,null,null,null);
+
+                    bigData.clear(); //いったん配列を空にする
+                    bigTitle.clear();
+                    boolean next = bcs.moveToFirst();//カーソルの先頭に移動
+                    while(next){ //Cursorデータが空になるまでbigTitle,bigDataに加えていく
+                        bigTitle.add(bcs.getString(1));//大目標のタイトル
+                        HashMap<String,String> item = new HashMap<>();
+                        item.put("id",""+bcs.getInt(0));
+                        item.put("content",bcs.getString(2));
+                        item.put("important",""+bcs.getInt(3));
+                        item.put("memo",bcs.getString(4));
+                        item.put("proceed",""+bcs.getInt(5));
+                        item.put("fin",""+bcs.getInt(6));
+                        bigData.add(item);
+                        next = bcs.moveToNext();
+                    }
+                    bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle));
+                    if(bigData.size()>0){ //大目標データ存在時、一番上に戻す
+                        bigDel = 0;
+                        bigTarget.setSelection(0);
+                    }else{ //大目標がないときは編集削除ボタンを無効化
+                        bedit.setEnabled(false);
+                        bdl.setEnabled(false);
+                    }
+
+                    if(fin==1) { //大目標タスク完了時は中小目標タスクも再読み込み
+                        //中目標を取得
+                        String[] mcols = {"id", "title", "big", "bigtitle", "bighold", "content", "important", "memo", "proceed", "fin"};//SQLデータから取得する列
+                        String[] mlevel = {"middle", "0", "1"};//中目標,保留なし、終了データのみを抽出
+                        Cursor mcs = db.query("ToDoData", mcols, "level=? and hold=? and fin=?", mlevel, null, null, null, null);
+
+                        middleData.clear(); //いったん配列を空にする
+                        middleTitle.clear();
+                        next = mcs.moveToFirst();//カーソルの先頭に移動
+                        while (next) {
+                            HashMap<String, String> item = new HashMap<>();
+                            item.put("id", "" + mcs.getInt(0));
+                            item.put("big", "" + mcs.getInt(2));
+                            item.put("content", mcs.getString(5));
+                            item.put("important", "" + mcs.getInt(6));
+                            item.put("memo", mcs.getString(7));
+                            item.put("proceed", "" + mcs.getInt(8));
+                            item.put("fin", "" + mcs.getInt(9));
+
+                            item.put("bigtitle", mcs.getString(3));
+                            item.put("title", mcs.getString(1));
+                            middleTitle.add(String.format("(%s)-%s", item.get("bigtitle"), mcs.getString(1)));
+
+                            middleData.add(item); //中目標データ配列に追加
+                            next = mcs.moveToNext();
+                        }
+                        middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+                        if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
+                            middleDel = 0;
+                            middleTarget.setSelection(0);
+                        }else{ //中目標がないときは編集削除ボタンを無効化
+                            medit.setEnabled(false);
+                            mdl.setEnabled(false);
+                        }
+                        //小目標を取得
+                        String[] scols = {"id", "title", "big", "bigtitle", "bighold", "middle", "middletitle", "middlehold", "content", "important", "memo", "proceed", "fin"};//SQLデータから取得する列
+                        String[] slevel = {"small", "0", "1"};//小目標、保留無し、終了データのみを抽出
+                        Cursor scs = db.query("ToDoData", scols, "level=? and hold=? and fin=?", slevel, null, null, null, null);
+
+                        smallData.clear(); //いったん配列を空にする
+                        smallTitle.clear();
+                        next = scs.moveToFirst();//カーソルの先頭に移動
+                        while (next) {
+                            HashMap<String, String> item = new HashMap<>();
+                            item.put("id", "" + scs.getInt(0));
+                            item.put("title", scs.getString(1));
+                            item.put("big", "" + scs.getInt(2));
+                            item.put("bigtitle", scs.getString(3));
+                            item.put("bighold", "" + scs.getInt(4));
+                            item.put("middle", "" + scs.getInt(5));
+                            item.put("middletitle", scs.getString(6));
+                            item.put("middlehold", "" + scs.getInt(7));
+                            item.put("content", scs.getString(8));
+                            item.put("important", "" + scs.getInt(9));
+                            item.put("memo", scs.getString(10));
+                            item.put("proceed", "" + scs.getInt(11));
+                            item.put("fin", "" + scs.getInt(12));
+
+                            smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
+
+                            smallData.add(item); //中目標データ配列に追加
+                            next = scs.moveToNext();
+                        }
+                        sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,smallTitle));
+                        sedit.setEnabled(false); //編集、削除ボタン無効化
+                        sdl.setEnabled(false);
+                    }
+
+                    //トランザクション成功
+                    db.setTransactionSuccessful();
+                }catch(SQLException e){
+                    e.printStackTrace();
+                }finally{
+                    //トランザクションを終了
+                    db.endTransaction();
+                }
+            }
+        }else if(progressLevel == 2){ //中目標進捗編集時データ配列を再読み込み
+
+            try(SQLiteDatabase db = helper.getReadableDatabase()){
+                //トランザクション開始
+                db.beginTransaction();
+                try{
+
+                    //中目標を取得
+                    String[] mcols = {"id","title","big","bigtitle","bighold","content","important","memo","proceed","fin"};//SQLデータから取得する列
+                    String[] mlevel = { "middle","0","1" };//中目標,保留なし、終了データのみを抽出
+                    Cursor mcs = db.query("ToDoData",mcols,"level=? and hold=? and fin=?",mlevel,null,null,null,null);
+
+                    middleData.clear(); //いったん配列を空にする
+                    middleTitle.clear();
+                    boolean next = mcs.moveToFirst();//カーソルの先頭に移動
+                    while(next){
+                        HashMap<String,String> item = new HashMap<>();
+                        item.put("id",""+mcs.getInt(0));
+                        item.put("big",""+mcs.getInt(2));
+                        item.put("content",mcs.getString(5));
+                        item.put("important",""+mcs.getInt(6));
+                        item.put("memo",mcs.getString(7));
+                        item.put("proceed",""+mcs.getInt(8));
+                        item.put("fin",""+mcs.getInt(9));
+
+                        item.put("bigtitle",mcs.getString(3));
+                        item.put("title",mcs.getString(1));
+                        middleTitle.add(String.format("(%s)-%s",item.get("bigtitle"),mcs.getString(1)));
+
+                        middleData.add(item); //中目標データ配列に追加
+                        next = mcs.moveToNext();
+                    }
+                    middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+                    if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
+                        middleDel = 0;
+                        middleTarget.setSelection(0);
+                    }else{ //中目標がないときは編集削除ボタンを無効化
+                        medit.setEnabled(false);
+                        mdl.setEnabled(false);
+                    }
+                    if(fin==1) { //タスク終了時は小目標も再読み込み
+                        //小目標を取得
+                        String[] scols = {"id", "title", "big", "bigtitle", "bighold", "middle", "middletitle", "middlehold", "content", "important", "memo", "proceed", "fin"};//SQLデータから取得する列
+                        String[] slevel = {"small", "0", "1"};//小目標、保留無し、終了データのみを抽出
+                        Cursor scs = db.query("ToDoData", scols, "level=? and hold=? and fin=?", slevel, null, null, null, null);
+
+                        smallData.clear(); //いったん配列を空にする
+                        smallTitle.clear();
+                        next = scs.moveToFirst();//カーソルの先頭に移動
+                        while (next) {
+                            HashMap<String, String> item = new HashMap<>();
+                            item.put("id", "" + scs.getInt(0));
+                            item.put("title", scs.getString(1));
+                            item.put("big", "" + scs.getInt(2));
+                            item.put("bigtitle", scs.getString(3));
+                            item.put("bighold", "" + scs.getInt(4));
+                            item.put("middle", "" + scs.getInt(5));
+                            item.put("middletitle", scs.getString(6));
+                            item.put("middlehold", "" + scs.getInt(7));
+                            item.put("content", scs.getString(8));
+                            item.put("important", "" + scs.getInt(9));
+                            item.put("memo", scs.getString(10));
+                            item.put("proceed", "" + scs.getInt(11));
+                            item.put("fin", "" + scs.getInt(12));
+
+                            smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
+
+                            smallData.add(item); //中目標データ配列に追加
+                            next = scs.moveToNext();
+                        }
+                        sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,smallTitle));
+                        sedit.setEnabled(false); //編集、削除ボタン無効化
+                        sdl.setEnabled(false);
+                    }
+                    //トランザクション成功
+                    db.setTransactionSuccessful();
+                }catch(SQLException e){
+                    e.printStackTrace();
+                }finally{
+                    //トランザクションを終了
+                    db.endTransaction();
+                }
+            }
+
+        }else if(progressLevel == 3){ //小目標進捗編集時データ配列を再読み込み
+
+            try(SQLiteDatabase db = helper.getReadableDatabase()){
+                //トランザクション開始
+                db.beginTransaction();
+                try{
+                    //小目標を取得
+                    String[] scols = {"id","title","big","bigtitle","bighold","middle","middletitle","middlehold","content","important","memo","proceed","fin"};//SQLデータから取得する列
+                    String[] slevel = { "small","0","1" };//小目標、保留無し、終了データのみを抽出
+                    Cursor scs = db.query("ToDoData",scols,"level=? and hold=? and fin=?",slevel,null,null,null,null);
+
+                    smallData.clear(); //いったん配列を空にする
+                    smallTitle.clear();
+                    boolean next = scs.moveToFirst();//カーソルの先頭に移動
+                    while(next){
+                        HashMap<String,String> item = new HashMap<>();
+                        item.put("id",""+scs.getInt(0));
+                        item.put("title",scs.getString(1));
+                        item.put("big",""+scs.getInt(2));
+                        item.put("bigtitle",scs.getString(3));
+                        item.put("bighold",""+scs.getInt(4));
+                        item.put("middle",""+scs.getInt(5));
+                        item.put("middletitle",scs.getString(6));
+                        item.put("middlehold",""+scs.getInt(7));
+                        item.put("content",scs.getString(8));
+                        item.put("important",""+scs.getInt(9));
+                        item.put("memo",scs.getString(10));
+                        item.put("proceed",""+scs.getInt(11));
+                        item.put("fin",""+scs.getInt(12));
+
+                        smallTitle.add(String.format("(%s)-(%s)-%s",item.get("bigtitle"),item.get("middletitle"),item.get("title")));
+
+                        smallData.add(item); //中目標データ配列に追加
+                        next = scs.moveToNext();
+                    }
+                    sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,smallTitle));
+                    sedit.setEnabled(false); //編集、削除ボタン無効化
+                    sdl.setEnabled(false);
+
+                    //トランザクション成功
+                    db.setTransactionSuccessful();
+                }catch(SQLException e){
+                    e.printStackTrace();
+                }finally{
+                    //トランザクションを終了
+                    db.endTransaction();
+                }
+            }
+
+        }else if(progressLevel == 4){ //スケジュール進捗編集時データ配列を再読み込み
+
+
+            try(SQLiteDatabase db = helper.getReadableDatabase()){
+                //トランザクション開始
+                db.beginTransaction();
+                try{
+
+                    //Calendarクラスのオブジェクトを生成する
+                    Calendar cl = Calendar.getInstance();
+                    //本日の日付データを取得
+                    String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
+
+                    //スケジュールを取得
+                    String[] schecols = {"id","title","date","content","important","memo","proceed","fin"};//SQLデータから取得する列
+                    String[] schelevel = { "schedule","0","1",today };//中目標,保留なし,完了,当日のデータのみを抽出
+                    Cursor schecs = db.query("ToDoData",schecols,"level=? and hold=? and fin=? and date=?",schelevel,null,null,null,null);
+
+                    scheData.clear(); //いったん配列を空にする
+                    scheTitle.clear();
+                    boolean next = schecs.moveToFirst();//カーソルの先頭に移動
+                    while(next){
+                        HashMap<String,String> item = new HashMap<>();
+                        item.put("id",""+schecs.getInt(0));
+                        item.put("title",schecs.getString(1));
+                        item.put("date",""+schecs.getString(2));
+                        item.put("content",schecs.getString(3));
+                        item.put("important",""+schecs.getInt(4));
+                        item.put("memo",schecs.getString(5));
+                        item.put("proceed",""+schecs.getInt(6));
+                        item.put("fin",""+schecs.getInt(7));
+                        scheData.add(item); //中目標データ配列に追加
+                        scheTitle.add(String.format("%s[%s]",item.get("title"),item.get("date")));
+                        next = schecs.moveToNext();
+                    }
+                    scheList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,scheTitle));
+                    scheedit.setEnabled(false); //編集、削除ボタン無効化
+                    schedl.setEnabled(false);
+
+                    //トランザクション成功
+                    db.setTransactionSuccessful();
+                }catch(SQLException e){
+                    e.printStackTrace();
+                }finally{
+                    //トランザクションを終了
+                    db.endTransaction();
+                }
+            }
+
+        }else{ //TODOリスト進捗編集時データ配列を再読み込み
+
+            try(SQLiteDatabase db = helper.getReadableDatabase()){
+                //トランザクション開始
+                db.beginTransaction();
+                try{
+                    //やることリストを取得
+                    String[] todocols = {"id","title","content","important","memo","proceed","fin"};//SQLデータから取得する列
+                    String[] todolevel = { "todo","0","1" };//中目標,保留なし,終了データのみを抽出
+                    Cursor todocs = db.query("ToDoData",todocols,"level=? and hold=? and fin=?",todolevel,null,null,null,null);
+
+                    todoData.clear(); //いったん配列を空にする
+                    todoTitle.clear();
+                    boolean next = todocs.moveToFirst();//カーソルの先頭に移動
+                    while(next){
+                        HashMap<String,String> item = new HashMap<>();
+                        item.put("id",""+todocs.getInt(0));
+                        item.put("title",todocs.getString(1));
+                        item.put("content",todocs.getString(2));
+                        item.put("important",""+todocs.getInt(3));
+                        item.put("memo",todocs.getString(4));
+                        item.put("proceed",""+todocs.getInt(5));
+                        item.put("fin",""+todocs.getInt(6));
+                        todoData.add(item); //中目標データ配列に追加
+                        todoTitle.add(String.format("%s",item.get("title")));
+                        next = todocs.moveToNext();
+                    }
+                    todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
+                    todoedit.setEnabled(false);
+                    tododl.setEnabled(false);
+
+                    //トランザクション成功
+                    db.setTransactionSuccessful();
+                }catch(SQLException e){
+                    e.printStackTrace();
+                }finally{
+                    //トランザクションを終了
+                    db.endTransaction();
+                }
+            }
+        }
+
+    }
 
     class editClicker implements View.OnClickListener { //編集ボタンクリックで編集画面へ飛ばす
         private String dlevel = ""; //削除データの項目変数
@@ -288,57 +842,6 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
         }
     }
 
-
-    class SpinSelecter implements AdapterView.OnItemSelectedListener{
-
-        @Override
-        public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-            //項目選択時のIDを取得
-            if(adapterView == bigTarget){ //大目標選択時のID取得
-                bid = Integer.parseInt( bigData.get(position).get("id"));
-                bigDel = position;
-                if(progress) {
-
-                    // フラグメントマネージャーを取得
-                    FragmentManager fragmentManager = getParentFragmentManager();
-
-                    Bundle data = new Bundle();
-                    data.putString("editcontent", smallData.get(position).get("memo"));
-                    data.putInt("editProg", Integer.parseInt(smallData.get(position).get("proceed")));
-                    data.putInt("editFin", Integer.parseInt(smallData.get(position).get("fin")));
-                    data.putInt("id", sid);
-                    ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
-                    dialog.setTargetFragment(FinishFragment.this, 0);
-
-                    dialog.show(fragmentManager,"dialog_progress");
-                }
-            }else if(adapterView == middleTarget){ //中目標選択時のID取得
-                mid = Integer.parseInt( middleData.get(position).get("id"));
-                middleDel = position;
-                if(progress) {
-
-                    // フラグメントマネージャーを取得
-                    FragmentManager fragmentManager = getParentFragmentManager();
-
-                    Bundle data = new Bundle();
-                    data.putString("editcontent", smallData.get(position).get("memo"));
-                    data.putInt("editProg", Integer.parseInt(smallData.get(position).get("proceed")));
-                    data.putInt("editFin", Integer.parseInt(smallData.get(position).get("fin")));
-                    data.putInt("id", sid);
-                    ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
-                    dialog.setTargetFragment(FinishFragment.this, 0);
-
-                    dialog.show(fragmentManager,"dialog_progress");
-                }
-            }
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> adapterView) {
-
-        }
-    }
-
     class ListSelecter implements AdapterView.OnItemClickListener{ //クリックされた項目のIDを取得
 
         @Override
@@ -346,9 +849,12 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
             if(adapterView == sList){ //小目標選択時のID取得
                 sid = Integer.parseInt( smallData.get(position).get("id"));
                 smallDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
                 //ToDo 進捗状況入力ダイアログ
                 if(progress) {
-
+                    progressLevel = 3;
                     // フラグメントマネージャーを取得
                     FragmentManager fragmentManager = getParentFragmentManager();
 
@@ -356,6 +862,7 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
                     data.putString("editcontent", smallData.get(position).get("memo"));
                     data.putInt("editProg", Integer.parseInt(smallData.get(position).get("proceed")));
                     data.putInt("editFin", Integer.parseInt(smallData.get(position).get("fin")));
+                    data.putString("editTitle", smallTitle.get(position));
                     data.putInt("id", sid);
                     ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
                     dialog.setTargetFragment(FinishFragment.this, 0);
@@ -367,16 +874,20 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
             }else if(adapterView == scheList){ //スケジュール選択時のID取得
                 scheid = Integer.parseInt( scheData.get(position).get("id"));
                 scheDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),scheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
                 if(progress) {
-
+                    progressLevel =4;
                     // フラグメントマネージャーを取得
                     FragmentManager fragmentManager = getParentFragmentManager();
 
                     Bundle data = new Bundle();
-                    data.putString("editcontent", smallData.get(position).get("memo"));
-                    data.putInt("editProg", Integer.parseInt(smallData.get(position).get("proceed")));
-                    data.putInt("editFin", Integer.parseInt(smallData.get(position).get("fin")));
-                    data.putInt("id", sid);
+                    data.putString("editcontent", scheData.get(position).get("memo"));
+                    data.putInt("editProg", Integer.parseInt(scheData.get(position).get("proceed")));
+                    data.putInt("editFin", Integer.parseInt(scheData.get(position).get("fin")));
+                    data.putInt("id", scheid);
+                    data.putString("editTitle", scheTitle.get(position));
                     ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
                     dialog.setTargetFragment(FinishFragment.this, 0);
 
@@ -387,16 +898,20 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
             }else if(adapterView == todoList){ //やることリスト選択時のID取得
                 todoid = Integer.parseInt( todoData.get(position).get("id") );
                 todoDel = position;
+                if(content){ //内容表示モード
+                    Toast.makeText(requireActivity(),todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                }
                 if(progress) {
-
+                    progressLevel =5;
                     // フラグメントマネージャーを取得
                     FragmentManager fragmentManager = getParentFragmentManager();
 
                     Bundle data = new Bundle();
-                    data.putString("editcontent", smallData.get(position).get("memo"));
-                    data.putInt("editProg", Integer.parseInt(smallData.get(position).get("proceed")));
-                    data.putInt("editFin", Integer.parseInt(smallData.get(position).get("fin")));
-                    data.putInt("id", sid);
+                    data.putString("editcontent", todoData.get(position).get("memo"));
+                    data.putInt("editProg", Integer.parseInt(todoData.get(position).get("proceed")));
+                    data.putInt("editFin", Integer.parseInt(todoData.get(position).get("fin")));
+                    data.putInt("id", todoid);
+                    data.putString("editTitle", todoTitle.get(position));
                     ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
                     dialog.setTargetFragment(FinishFragment.this, 0);
 
@@ -521,53 +1036,68 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
                 //大目標を取得
 
                 String[] bcols = {"id","title","content","hold","important","memo","proceed","fin"};//SQLデータから取得する列
-                String[] blevel = { "big","1" };//大目標、完了済データのみを抽出
-                Cursor bcs = db.query("ToDoData",bcols,"level=? and fin=?",blevel,null,null,null,null);
+                String[] blevel = { "big" };//大目標、完了済データのみを抽出
+                Cursor bcs = db.query("ToDoData",bcols,"level=?",blevel,null,null,null,null);
 
                 bigData.clear(); //いったん配列を空にする
                 bigTitle.clear();
+                nonBigData.clear();
 
                 boolean next = bcs.moveToFirst();//カーソルの先頭に移動
                 while(next){ //Cursorデータが空になるまでbigTitle,bigDataに加えていく
-                        bigTitle.add(bcs.getString(1));//大目標のタイトル
-                        HashMap<String,String> item = new HashMap<>();
-                        item.put("id",""+bcs.getInt(0));
-                        item.put("content",bcs.getString(2));
-                        item.put("hold",""+bcs.getInt(3));
-                        item.put("important",bcs.getString(4));
-                        item.put("memo",bcs.getString(5));
-                        item.put("proceed",bcs.getString(6));
-                        item.put("fin",bcs.getString(7));
+                    String btitle = bcs.getString(1);
+                    int bfin = bcs.getInt(7);
+                    HashMap<String,String> item = new HashMap<>();
+                    item.put("id",""+bcs.getInt(0));
+                    item.put("title",btitle);
+                    item.put("content",bcs.getString(2));
+                    item.put("hold",""+bcs.getInt(3));
+                    item.put("important",""+bcs.getInt(4));
+                    item.put("memo",bcs.getString(5));
+                    item.put("proceed",""+bcs.getInt(6));
+                    item.put("fin",""+bfin);
+
+                    if(bfin == 1) {
+                        bigTitle.add(btitle+"(完)");//大目標のタイトル
                         bigData.add(item);
+                    }
                     next = bcs.moveToNext();
                 }
 
                 //中目標を取得
                 String[] mcols = {"id","title","big","bigtitle","bighold","content","hold","important","memo","proceed","fin"};//SQLデータから取得する列
-                String[] mlevel = { "middle","1" };//中目標のみを抽出
-                Cursor mcs = db.query("ToDoData",mcols,"level=? and fin=?",mlevel,null,null,null,null);
+                String[] mlevel = { "middle"};//中目標のみを抽出
+                Cursor mcs = db.query("ToDoData",mcols,"level=?",mlevel,null,null,null,null);
 
                 middleData.clear(); //いったん配列を空にする
                 middleTitle.clear();
+                nonMiddleData.clear();
                 next = mcs.moveToFirst();//カーソルの先頭に移動
                 while(next){
+                    String mtitle = mcs.getString(1);
+                    String btitle = mcs.getString(3);
+                    int big = mcs.getInt(2);
+                    int mfin = mcs.getInt(10);
                         HashMap<String,String> item = new HashMap<>();
                         item.put("id",""+mcs.getInt(0));
-                        item.put("big",""+mcs.getInt(2));
-                        item.put("bigtitle",""+mcs.getString(3));
+                        item.put("title",mtitle);
+                        item.put("big",""+big);
+                        item.put("bigtitle",btitle);
                         item.put("bighold",""+mcs.getInt(4));
                         item.put("content",mcs.getString(5));
                         item.put("hold",""+mcs.getInt(6));
-                        item.put("important",mcs.getString(7));
+                        item.put("important",""+mcs.getInt(7));
                         item.put("memo",mcs.getString(8));
-                        item.put("proceed",mcs.getString(9));
-                        item.put("fin",mcs.getString(10));
-                        if(!item.get("big").equals("0")){ //大目標が存在するとき
-                            middleTitle.add(String.format("(%s)-%s",item.get("bigtitle"),mcs.getString(1)));
-                        }else{
-                            middleTitle.add(String.format("大目標未設定-%s",mcs.getString(1)));
+                        item.put("proceed",""+mcs.getInt(9));
+                        item.put("fin",""+mfin);
+                        if(mfin == 1) {
+                            middleData.add(item); //中目標データ配列に追加
+                            if (big != 0) { //大目標が存在するとき
+                                middleTitle.add(String.format("(%s)-%s(完)", btitle, mtitle));
+                            } else {
+                                middleTitle.add(String.format("大目標未設定-%s(完)", mtitle));
+                            }
                         }
-                        middleData.add(item); //中目標データ配列に追加
 
                     next = mcs.moveToNext();
                 }
@@ -581,24 +1111,28 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
                 smallTitle.clear();
                 next = scs.moveToFirst();//カーソルの先頭に移動
                 while(next){
+                    String title = scs.getString(1);
+                    String bigtitle = scs.getString(3);
+                    String middletitle = scs.getString(6);
+                    int middle = scs.getInt(5);
                     HashMap<String,String> item = new HashMap<>();
                     item.put("id",""+scs.getInt(0));
-                    item.put("title",scs.getString(1));
+                    item.put("title",title);
                     item.put("big",""+scs.getInt(2));
-                    item.put("bigtitle",scs.getString(3));
+                    item.put("bigtitle",bigtitle);
                     item.put("bighold",""+scs.getInt(4));
-                    item.put("middle",""+scs.getInt(5));
-                    item.put("middletitle",scs.getString(6));
+                    item.put("middle",""+middle);
+                    item.put("middletitle",middletitle);
                     item.put("middlehold",""+scs.getInt(7));
                     item.put("content",scs.getString(8));
-                    item.put("important",scs.getString(9));
+                    item.put("important",""+scs.getInt(9));
                     item.put("memo",scs.getString(10));
-                    item.put("proceed",scs.getString(11));
-                    item.put("fin",scs.getString(12));
-                    if(!item.get("middle").equals("0")){ //中目標が存在するとき
-                        smallTitle.add(String.format("(%s)-(%s)-%s",item.get("bigtitle"),item.get("middletitle"),mcs.getString(1)));
+                    item.put("proceed",""+scs.getInt(11));
+                    item.put("fin",""+scs.getInt(12));
+                    if(middle != 0){ //中目標が存在するとき
+                        smallTitle.add(String.format("(%s)-(%s)-%s(完)",bigtitle,middletitle,title));
                     }else{
-                        middleTitle.add(String.format("大目標未設定-中目標未設定-%s",mcs.getString(1)));
+                        middleTitle.add(String.format("大目標未設定-中目標未設定-%s(完)",title));
                     }
                     smallData.add(item); //中目標データ配列に追加
                     next = scs.moveToNext();
@@ -623,7 +1157,7 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
                     item.put("proceed",schecs.getString(6));
                     item.put("fin",schecs.getString(7));
                     scheData.add(item); //中目標データ配列に追加
-                    scheTitle.add(String.format("[%s]%s",item.get("date"),item.get("title")));
+                    scheTitle.add(String.format("[%s]%s(完)",item.get("date"),item.get("title")));
                     next = schecs.moveToNext();
                 }
 
@@ -645,7 +1179,7 @@ public class FinishFragment extends Fragment  implements DelDialogFragment.DelDi
                     item.put("proceed",todocs.getString(5));
                     item.put("fin",todocs.getString(6));
                     todoData.add(item); //中目標データ配列に追加
-                    todoTitle.add(String.format("%s",item.get("title")));
+                    todoTitle.add(String.format("%s(完)",item.get("title")));
                     next = todocs.moveToNext();
                 }
 

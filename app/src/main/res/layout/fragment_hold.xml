@@ -27,7 +27,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/smallTargetList" />
 
-    <Spinner
+    <and.todo.CustomSpinner
         android:id="@+id/bigTarget"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -38,7 +38,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
 
-    <Spinner
+    <and.todo.CustomSpinner
         android:id="@+id/middleTarget"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -48,6 +48,7 @@
         app:layout_constraintEnd_toStartOf="@+id/MeditButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/middleTitle" />
+
 
     <ListView
         android:id="@+id/smallTargetList"
@@ -120,9 +121,9 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#8BC34A"
-        app:srcCompat="@drawable/garbagecan"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/middleTarget" />
+        app:layout_constraintTop_toTopOf="@+id/middleTitle"
+        app:srcCompat="@drawable/garbagecan" />
 
     <TextView
         android:id="@+id/todo"
@@ -136,7 +137,8 @@
     <ListView
         android:id="@+id/todoList"
         android:layout_width="0dp"
-        android:layout_height="200dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/modeChange"
         app:layout_constraintEnd_toStartOf="@+id/todoDelete"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/todo" />
@@ -171,5 +173,16 @@
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <and.todo.CustomSpinner
+        android:id="@+id/modeChange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:prompt="@string/middle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

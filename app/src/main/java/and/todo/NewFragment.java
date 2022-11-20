@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -281,8 +282,16 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
                     db.endTransaction();
 
                     //TopFragmentに移動
+                    // FragmentManagerのインスタンス生成
                     FragmentManager fragmentManager = getParentFragmentManager();
-                    fragmentManager.popBackStack();
+                    // FragmentTransactionのインスタンスを取得
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    // インスタンスに対して張り付け方を指定する
+
+                    Bundle sendData = new Bundle(); //データやり取り用のBundleデータ
+                    fragmentTransaction.replace(R.id.MainFragment, TopFragment.newInstance(sendData));
+                    // 張り付けを実行
+                    fragmentTransaction.commit();
                 }
 
             }

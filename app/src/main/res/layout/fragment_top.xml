@@ -7,9 +7,9 @@
 
     <ImageButton
         android:id="@+id/SdeleteButton"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#8BC34A"
         app:layout_constraintEnd_toEndOf="parent"
@@ -18,16 +18,16 @@
 
     <ImageButton
         android:id="@+id/SeditButton"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#FF9800"
-        app:srcCompat="@drawable/edit"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/smallTargetList" />
+        app:layout_constraintTop_toTopOf="@+id/smallTitle"
+        app:srcCompat="@drawable/edit" />
 
-    <Spinner
+    <and.todo.CustomSpinner
         android:id="@+id/bigTarget"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -38,7 +38,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
 
-    <Spinner
+    <and.todo.CustomSpinner
+        android:id="@+id/modeChange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <and.todo.CustomSpinner
         android:id="@+id/middleTarget"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -52,22 +61,10 @@
     <ListView
         android:id="@+id/smallTargetList"
         android:layout_width="0dp"
-        android:layout_height="120dp"
+        android:layout_height="150dp"
         app:layout_constraintEnd_toStartOf="@+id/SdeleteButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/smallTitle" />
-
-    <Button
-        android:id="@+id/newButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:backgroundTint="#ED80FF"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:text="@string/newin"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
         android:id="@+id/smallTitle"
@@ -106,9 +103,10 @@
 
         <ImageButton
             android:id="@+id/ScheDeleteButton"
-            android:layout_width="40dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="4dp"
             android:backgroundTint="#8BC34A"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/ScheEditButton"
@@ -137,78 +135,57 @@
 
         <ImageButton
             android:id="@+id/ScheEditButton"
-            android:layout_width="40dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="4dp"
             android:backgroundTint="#FF9800"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/edit" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <Button
-        android:id="@+id/logButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:backgroundTint="#FF5F5F"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:text="@string/log"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/newButton" />
-
-    <Button
-        android:id="@+id/holdButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:backgroundTint="#30A59A"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:text="@string/hold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/logButton" />
-
     <ImageButton
         android:id="@+id/BdeleteButton"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#8BC34A"
-        app:srcCompat="@drawable/garbagecan"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/bigTarget" />
+        app:layout_constraintTop_toTopOf="@+id/bigTarget"
+        app:srcCompat="@drawable/garbagecan" />
 
     <ImageButton
         android:id="@+id/BeditButton"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#FF9800"
-        app:srcCompat="@drawable/edit"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         app:layout_constraintEnd_toStartOf="@+id/BdeleteButton"
-        app:layout_constraintTop_toTopOf="@+id/BdeleteButton" />
+        app:layout_constraintTop_toTopOf="@+id/BdeleteButton"
+        app:srcCompat="@drawable/edit" />
 
     <ImageButton
         android:id="@+id/MeditButton"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#FF9800"
-        app:srcCompat="@drawable/edit"
         app:layout_constraintEnd_toStartOf="@+id/MdeleteButton"
-        app:layout_constraintTop_toTopOf="@+id/MdeleteButton" />
+        app:layout_constraintTop_toTopOf="@+id/MdeleteButton"
+        app:srcCompat="@drawable/edit" />
 
     <ImageButton
         android:id="@+id/MdeleteButton"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#8BC34A"
-        app:srcCompat="@drawable/garbagecan"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/middleTarget" />
+        app:layout_constraintTop_toTopOf="@+id/middleTarget"
+        app:srcCompat="@drawable/garbagecan" />
 
     <TextView
         android:id="@+id/todo"
@@ -222,63 +199,33 @@
     <ListView
         android:id="@+id/todoList"
         android:layout_width="0dp"
-        android:layout_height="139dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/modeChange"
         app:layout_constraintEnd_toStartOf="@+id/todoDelete"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/todo" />
 
     <ImageButton
         android:id="@+id/todoEdit"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#FF9800"
-        app:srcCompat="@drawable/edit"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/todoList" />
+        app:layout_constraintTop_toTopOf="@+id/todo"
+        app:srcCompat="@drawable/edit" />
 
     <ImageButton
         android:id="@+id/todoDelete"
-        android:layout_width="40dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="4dp"
         android:backgroundTint="#8BC34A"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/todoEdit"
         app:srcCompat="@drawable/garbagecan" />
 
-    <ImageButton
-        android:id="@+id/scheButton"
-        android:layout_width="45dp"
-        android:layout_height="0dp"
-        android:layout_marginEnd="4dp"
-        android:backgroundTint="#FFDC73"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/holdButton"
-        app:layout_constraintTop_toTopOf="@+id/holdButton"
-        app:srcCompat="@drawable/cal" />
-
-    <CheckBox
-        android:id="@+id/checkProgress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="進捗記録"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btnFin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:backgroundTint="#4295D8"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:text="終"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/scheButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
