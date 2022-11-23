@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +23,9 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,8 +54,7 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
     Bundle sendData;
 
     CustomSpinner bigTarget,middleTarget; //大中目標のスピナー変数
-    ListView sList,scheList,todoList; //小目標スケジュールのリスト変数
-
+    RecyclerView sList,scheList,todoList; //小目標スケジュールのリスト変数
 
     public static HoldFragment newInstance(Bundle Data){//インスタンス作成時にまず呼び出す
         // インスタンス生成
@@ -90,7 +93,7 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         bigTarget = (CustomSpinner) view.findViewById(R.id.bigTarget);
         ArrayAdapter<String> bAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
         bigTarget.setAdapter(bAdapter);
-        bigTarget.setOnItemSelectedListener(new HoldFragment.SpinSelecter());
+        bigTarget.setOnItemSelectedListener(new SpinSelecter());
         if(bigData.size()>0) { //大目標が１つ以上あるときの初期設定
             bid = Integer.parseInt(bigData.get(0).get("id")); //大目標の初期位置ID
         }
@@ -99,24 +102,140 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         middleTarget = (CustomSpinner) view.findViewById(R.id.middleTarget);
         ArrayAdapter<String> mAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
         middleTarget.setAdapter(mAdapter);
-        middleTarget.setOnItemSelectedListener(new HoldFragment.SpinSelecter());
+        middleTarget.setOnItemSelectedListener(new SpinSelecter());
         if(middleData.size()>0) { //中目標が１つ以上あるときの初期設定
             mid = Integer.parseInt(middleData.get(0).get("id")); //中目標の初期位置ID
         }
 
-        //小目標にデータ設定
-        sList = view.findViewById(R.id.smallTargetList);
-        sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
-        sList.setOnItemClickListener(new HoldFragment.ListSelecter());
 
-        //やることリストにデータ設定
-        todoList = view.findViewById(R.id.todoList);
-        todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
-        todoList.setOnItemClickListener(new HoldFragment.ListSelecter());
+        if(smallData.size()==0){ //小目標がない時レイアウトを消す
+            //レイアウトを取得して消去しブランクにする
+            ConstraintLayout layout;
+            layout = (ConstraintLayout) view.findViewById(R.id.smallLayout);
+            layout.removeAllViews();
+            getLayoutInflater().inflate(R.layout.non_items, layout);
+            TextView non = layout.findViewById(R.id.noItems);
+            non.setText("小目標なし");
+        }else {
 
+            //小目標にデータ設定
+            sList = view.findViewById(R.id.smallTargetList);
+            sList.setHasFixedSize(true);
+            LinearLayoutManager  rLayoutManager = new LinearLayoutManager(requireActivity());
+            rLayoutManager.setOrientation(LinearLayoutManager.VERTICAL); //縦方向に設定
+
+            sList.setLayoutManager(rLayoutManager);
+            DividerItemDecoration itemDecoration = new DividerItemDecoration(requireActivity(), rLayoutManager.getOrientation());
+            sList.addItemDecoration(itemDecoration);
+
+
+            MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onSmallItemClick(view,position,itemData);
+                }
+            };
+            sList.setAdapter(adapter);
+
+
+
+            /*            sList.setOnTouchListener(this);*/
+            //LayoutParamsを取得
+            ViewGroup.LayoutParams params = sList.getLayoutParams();
+            if (smallData.size() == 1) { //リストの項目数で高さを変える
+                params.height = 100;
+            } else if (smallData.size() == 2) {
+                params.height = 200;
+            } else if(smallData.size() == 3){
+                params.height = 300;
+            } else if(smallData.size() == 4){
+                params.height = 400;
+            }else if(smallData.size() == 5){
+                params.height = 500;
+            }else if (smallData.size() == 6) {
+                params.height = 600;
+            } else if(smallData.size() == 7){
+                params.height = 700;
+            }else if(smallData.size() == 8){
+                params.height = 800;
+            }else if (smallData.size() >= 9) {
+                params.height = 900;
+            }
+            sList.setLayoutParams(params);
+
+            sedit = (ImageButton) view.findViewById(R.id.SeditButton);
+            sedit.setEnabled(false); //項目選択まで無効化
+            sedit.setOnClickListener(new editClicker());
+            sdl = (ImageButton) view.findViewById(R.id.SdeleteButton);
+            sdl.setEnabled(false); //項目選択まで削除ボタン無効化
+            sdl.setOnClickListener(new editClicker());
+
+        }
+
+        if(todoData.size()==0){ //TODOリストにデータがないときレイアウトを消す
+            //レイアウトを取得して消去しブランクにする
+            ConstraintLayout layout;
+            layout = (ConstraintLayout) view.findViewById(R.id.todoLayout);
+            layout.removeAllViews();
+            getLayoutInflater().inflate(R.layout.non_items, layout);
+            TextView non = layout.findViewById(R.id.noItems);
+            non.setText("TODOリストなし");
+        }else {
+
+            //やることリストにデータ設定
+            todoList = view.findViewById(R.id.todoList);
+            todoList.setHasFixedSize(true);
+            LinearLayoutManager  rLayoutManager = new LinearLayoutManager(requireActivity());
+            rLayoutManager.setOrientation(LinearLayoutManager.VERTICAL); //縦方向に設定
+
+            todoList.setLayoutManager(rLayoutManager);
+            DividerItemDecoration itemDecoration = new DividerItemDecoration(requireActivity(), rLayoutManager.getOrientation());
+            todoList.addItemDecoration(itemDecoration);
+
+
+            MyAdapter adapter = new MyAdapter(todoTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onToDoItemClick(view,position,itemData);
+                }
+            };
+            todoList.setAdapter(adapter);
+
+
+            //LayoutParamsを取得
+            ViewGroup.LayoutParams params = todoList.getLayoutParams();
+            if (todoData.size() == 1) {
+                params.height = 100;
+            } else if (todoData.size() == 2) {
+                params.height = 200;
+            } else if(todoData.size() == 3){
+                params.height = 300;
+            } else if(todoData.size() == 4){
+                params.height = 400;
+            }else if(todoData.size() == 5){
+                params.height = 500;
+            }else if (todoData.size() == 6) {
+                params.height =600;
+            } else if(todoData.size() == 7){
+                params.height = 700;
+            }else if(todoData.size() == 8){
+                params.height = 800;
+            }else if (todoData.size() >= 9) {
+                params.height = 900;
+            }
+            todoList.setLayoutParams(params);
+
+            todoedit = (ImageButton) view.findViewById(R.id.todoEdit);
+            todoedit.setEnabled(false);
+            todoedit.setOnClickListener(new editClicker());
+            tododl = (ImageButton) view.findViewById(R.id.todoDelete);
+            tododl.setEnabled(false);
+            tododl.setOnClickListener(new editClicker());
+
+        }
 
         CustomSpinner cspinner = view.findViewById(R.id.modeChange); //編集モード選択スピナー取得
-        String[] spinnerItems = { "標準モード", "内容表示モード" };
+        String[] spinnerItems = { "モード選択","標準モード", "内容表示モード" };
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(),
                 android.R.layout.simple_spinner_item,
                 spinnerItems);
@@ -125,9 +244,9 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) { //大目標選択時のID取得
-                if(position==0){ //標準モード（選択しても表示されない）
+                if(position==1){ //標準モード（選択しても表示されない）
                     content = false;
-                }else{ //内容表示モード（項目の内容をトースト表示）
+                }else if(position==2){ //内容表示モード（項目の内容をトースト表示）
                     content = true;
                 }
             }
@@ -152,15 +271,9 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         }else{ //中目標データがあれば編集ボタン無効化
             medit.setEnabled(false);
         }
-        sedit = (ImageButton) view.findViewById(R.id.SeditButton);
-        sedit.setEnabled(false); //項目選択まで無効化
-        todoedit = (ImageButton) view.findViewById(R.id.todoEdit);
-        todoedit.setEnabled(false);
         //各編集ボタンのイベントリスナー
         bedit.setOnClickListener(new HoldFragment.editClicker());
         medit.setOnClickListener(new HoldFragment.editClicker());
-        sedit.setOnClickListener(new HoldFragment.editClicker());
-        todoedit.setOnClickListener(new HoldFragment.editClicker());
 
         //各削除ボタン要素を取得
         bdl = (ImageButton) view.findViewById(R.id.BdeleteButton);
@@ -175,15 +288,9 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         }else{ //中目標データがなければ削除ボタン無効化
             mdl.setEnabled(false);
         }
-        sdl = (ImageButton) view.findViewById(R.id.SdeleteButton);
-        sdl.setEnabled(false); //項目選択まで削除ボタン無効化
-        tododl = (ImageButton) view.findViewById(R.id.todoDelete);
-        tododl.setEnabled(false);
         //各削除ボタンのイベントリスナー
         bdl.setOnClickListener(new HoldFragment.editClicker());
         mdl.setOnClickListener(new HoldFragment.editClicker());
-        sdl.setOnClickListener(new HoldFragment.editClicker());
-        tododl.setOnClickListener(new HoldFragment.editClicker());
 
 
     }
@@ -258,7 +365,24 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         }
     }
 
-
+    public void onSmallItemClick(View view,int position,String itemData){//小目標項目選択時のID取得,処理
+        sid = Integer.parseInt( smallData.get(position).get("id"));
+        smallDel = position;
+        if(content){ //内容表示モード
+            Toast.makeText(requireActivity(),smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
+        }
+        sedit.setEnabled(true); //編集ボタン有効化
+        sdl.setEnabled(true); //削除ボタン有効化
+    }
+    public void onToDoItemClick(View view,int position,String itemData){  //やることリスト項目選択時のID取得,処理
+        todoid = Integer.parseInt( todoData.get(position).get("id") );
+        todoDel = position;
+        if(content){ //内容表示モード
+            Toast.makeText(requireActivity(),todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
+        }
+        todoedit.setEnabled(true);
+        tododl.setEnabled(true);
+    }
 
     class SpinSelecter implements AdapterView.OnItemSelectedListener{
 
@@ -283,30 +407,6 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
         @Override
         public void onNothingSelected(AdapterView<?> adapterView) {
 
-        }
-    }
-
-    class ListSelecter implements AdapterView.OnItemClickListener{ //クリックされた項目のIDを取得
-
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-            if(adapterView == sList){ //小目標選択時のID取得
-                sid = Integer.parseInt( smallData.get(position).get("id"));
-                smallDel = position;
-                if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
-                }
-                sedit.setEnabled(true); //編集ボタン有効化
-                sdl.setEnabled(true); //削除ボタン有効化
-            }else if(adapterView == todoList){ //やることリスト選択時のID取得
-                todoid = Integer.parseInt( todoData.get(position).get("id") );
-                todoDel = position;
-                if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
-                }
-                todoedit.setEnabled(true);
-                tododl.setEnabled(true);
-            }
         }
     }
 
@@ -337,21 +437,23 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
                     middleTitle.clear();
                     boolean next = mcs.moveToFirst();//カーソルの先頭に移動
                     while(next){
-                        if(mcs.getInt(6)==1){ //保留中の中目標配列データ保存
+                        int big = mcs.getInt(2);
+                        int hold = mcs.getInt(6);
+                        if(hold==1){ //保留中の中目標配列データ保存
                             HashMap<String,String> item = new HashMap<>();
                             item.put("id",""+mcs.getInt(0));
                             item.put("title",mcs.getString(1));
-                            item.put("big",""+mcs.getInt(2));
+                            item.put("big",""+big);
                             item.put("bigtitle",mcs.getString(3));
                             item.put("bighold",""+mcs.getInt(4));
                             item.put("content",mcs.getString(5));
-                            item.put("hold",""+mcs.getInt(6));
+                            item.put("hold",""+hold);
                             item.put("important",""+mcs.getInt(7));
                             item.put("memo",mcs.getString(8));
                             item.put("proceed",""+mcs.getInt(9));
                             item.put("fin",""+mcs.getInt(10));
 
-                            if(mcs.getInt(2) !=0){ //大目標が存在するとき
+                            if(big !=0){ //大目標が存在するとき
 
                                 if(Integer.parseInt(item.get("bighold"))==1){ //大目標保留中
                                     middleTitle.add(String.format("(%s(保))-%s(保)",item.get("bigtitle"),mcs.getString(1)));
@@ -438,10 +540,19 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
             }
             //中小目標をリストに再設定
             middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
-            sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
 
+            MyAdapter sadapter = new MyAdapter(smallTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onSmallItemClick(view,position,itemData);
+                }
+            };
+            sList.setAdapter(sadapter);
+            sedit.setEnabled(false);
+            sdl.setEnabled(false);
             if(bigData.size()>0){ //大目標が存在するとき
                 bigTarget.setSelection(0);
+                bigDel = 0;
                 bid = Integer.parseInt(bigData.get(0).get("id")); //大目標IDを初期状態に
             }else{//大目標が存在しないとき
                 bid = 0;
@@ -450,13 +561,13 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
             }
             if(middleData.size()>0){ //中目標が存在するとき
                 middleTarget.setSelection(0);
+                middleDel = 0;
                 mid = Integer.parseInt(middleData.get(0).get("id")); //中目標を初期状態に
             }else{//中目標が存在しないとき
                 mid = 0;
                 medit.setEnabled(false); //編集ボタン無効化
                 mdl.setEnabled(false); //削除ボタン無効化
             }
-            bigDel = 0;
         }else if(dlevel.equals("middle")){ //中目標削除時の処理
             middleData.remove(middleDel);
             middleTitle.remove(middleDel);
@@ -534,29 +645,51 @@ public class HoldFragment extends Fragment implements DelDialogFragment.DelDialo
                     db.endTransaction();
                 }
             }
-            sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
 
+            MyAdapter sadapter = new MyAdapter(smallTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    //onSmallItemClick(view,position,itemData);
+                }
+            };
+            sList.setAdapter(sadapter);
+            sedit.setEnabled(false);
+            sdl.setEnabled(false);
             if(middleData.size()>0){ //中目標が存在するとき
                 middleTarget.setSelection(0);
+                middleDel = 0;
                 mid = Integer.parseInt(middleData.get(0).get("id")); //中目標を初期状態に
             }else{//中目標が存在しないとき
                 mid = 0;
                 medit.setEnabled(false); //編集ボタン無効化
                 mdl.setEnabled(false); //削除ボタン無効化
             }
-            middleDel = 0;
         }else if(dlevel.equals("small")){
             smallData.remove(smallDel);
             smallTitle.remove(smallDel);
-            sList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,smallTitle));
+
+            MyAdapter sadapter = new MyAdapter(smallTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onSmallItemClick(view,position,itemData);
+                }
+            };
+            sList.setAdapter(sadapter);
             sedit.setEnabled(false); //ボタンを無効化
             sdl.setEnabled(false);
         }else if(dlevel.equals("todo")){
             todoData.remove(todoDel);
             todoTitle.remove(todoDel);
-            todoList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todoTitle));
+            MyAdapter adapter = new MyAdapter(todoTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onToDoItemClick(view,position,itemData);
+                }
+            };
+            todoList.setAdapter(adapter);
             todoedit.setEnabled(false);//ボタンを無効化
             tododl.setEnabled(false);
+            todoid = 0;
             todoDel=0; //削除するデータのインデックスリセット
         }
 

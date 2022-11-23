@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,12 +24,16 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 
+@SuppressWarnings("all") //ToDo　後で削除してできるかぎり警告文修正
 public class ScheduleFragment extends Fragment implements ProgressDialogFragment.ProgressDialogListener,DelDialogFragment.DelDialogListener{
     private ArrayList<HashMap<String,String>> futureScheData = new ArrayList<>();//今後の予定
     private ArrayList<String> futureScheTitle = new ArrayList<>();
@@ -37,7 +42,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
     private ArrayList<HashMap<String,String>> pastScheData = new ArrayList<>();//過去の予定
     private ArrayList<String> pastScheTitle = new ArrayList<>();
     private EditDatabaseHelper helper;
-    private ListView futureList,todayList,pastList;
+    private RecyclerView futureList,todayList,pastList;
     private int futureid=0,todayid=0,pastid=0; //選択したID
     private ImageButton futureEdit,futureDel,todayEdit,todayDel,pastEdit,pastDel;
     int futureDelIndex=0,todayDelIndex=0,pastDelIndex=0;//データ削除時配列からも削除するためのインデックス変数
@@ -74,151 +79,194 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
 
         getSchedule(); //スケジュールデータを取得する
 
-        futureList = view.findViewById(R.id.futureScheduleList); //今後のスケジュールリスト設定
-        futureList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,futureScheTitle));
-        futureList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                futureid = Integer.parseInt( futureScheData.get(position).get("id"));
-                futureEdit.setEnabled(true);
-                futureDel.setEnabled(true);
-                futureDelIndex = position;
-                if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),futureScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
-                }
-                //ToDo 進捗状況入力ダイアログ
-                if(progress) {
-                    progressLevel = 1;
-                    // フラグメントマネージャーを取得
-                    FragmentManager fragmentManager = getParentFragmentManager();
 
-                    Bundle data = new Bundle();
-                    data.putString("editcontent", futureScheData.get(position).get("memo"));
-                    data.putInt("editProg", Integer.parseInt(futureScheData.get(position).get("proceed")));
-                    data.putInt("editFin", Integer.parseInt(futureScheData.get(position).get("fin")));
-                    data.putString("editTitle", futureScheTitle.get(position));
-                    data.putInt("id", futureid);
-                    ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
-                    dialog.setTargetFragment(ScheduleFragment.this, 0);
+        if(futureScheData.size()==0){ //スケジュールデータがない時レイアウトを消す
+            //レイアウトを取得して消去しブランクにする
+            ConstraintLayout layout;
+            layout = (ConstraintLayout) view.findViewById(R.id.futureScheduleLayout);
+            layout.removeAllViews();
+            getLayoutInflater().inflate(R.layout.non_items, layout);
+            TextView non = layout.findViewById(R.id.noItems);
+            non.setText("今後のスケジュール予定なし");
+        }else {
 
-                    dialog.show(fragmentManager,"dialog_progress");
+            //今後のスケジュールリストにデータ設定
+            futureList = view.findViewById(R.id.futureScheduleList);
+            futureList.setHasFixedSize(true);
+            LinearLayoutManager rLayoutManager = new LinearLayoutManager(requireActivity());
+            rLayoutManager.setOrientation(LinearLayoutManager.VERTICAL); //縦方向に設定
+
+            futureList.setLayoutManager(rLayoutManager);
+            DividerItemDecoration itemDecoration = new DividerItemDecoration(requireActivity(), rLayoutManager.getOrientation());
+            futureList.addItemDecoration(itemDecoration);
+
+
+            MyAdapter adapter = new MyAdapter(futureScheTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onFutureItemClick(view,position,itemData);
                 }
+            };
+            futureList.setAdapter(adapter);
+
+            //LayoutParamsを取得
+            ViewGroup.LayoutParams params = futureList.getLayoutParams();
+            if (futureScheData.size() == 1) { //リストの項目数で高さを変える
+                params.height = 100;
+            } else if (futureScheData.size() == 2) {
+                params.height = 200;
+            } else if(futureScheData.size() == 3){
+                params.height = 300;
+            } else if(futureScheData.size() == 4){
+                params.height = 400;
+            }else if(futureScheData.size() == 5){
+                params.height = 500;
+            }else if (futureScheData.size() == 6) {
+                params.height = 600;
+            } else if(futureScheData.size() == 7){
+                params.height = 700;
+            }else if(futureScheData.size() == 8){
+                params.height = 800;
+            }else if (futureScheData.size() >= 9) {
+                params.height = 900;
             }
-        });
+            futureList.setLayoutParams(params);
 
-        //ToDo その日の予定数によってスケジュールの大きさ変更
+            futureEdit = (ImageButton) view.findViewById(R.id.futureEditButton);
+            futureEdit.setEnabled(false); //項目選択まで無効化
+            futureEdit.setOnClickListener(new editClicker());
+            futureDel = (ImageButton) view.findViewById(R.id.futureDelButton);
+            futureDel.setEnabled(false); //項目選択まで削除ボタン無効化
+            futureDel.setOnClickListener(new editClicker());
 
-        if(todayScheData.size()==0){ //スケジュールがないとき当日のスケジュール枠を消す
+        }
+
+        if(todayScheData.size()==0){ //スケジュールデータがない時レイアウトを消す
             //レイアウトを取得して消去しブランクにする
             ConstraintLayout layout;
             layout = (ConstraintLayout) view.findViewById(R.id.todayListLayout);
             layout.removeAllViews();
-            getLayoutInflater().inflate(R.layout.non_today_schedule, layout);
-        }else{
-            ConstraintLayout layout;
-            layout = (ConstraintLayout) view.findViewById(R.id.todayListLayout);
-            //スケジュールにデータ設定
+            getLayoutInflater().inflate(R.layout.non_items, layout);
+            TextView non = layout.findViewById(R.id.noItems);
+            non.setText("本日のスケジュール予定なし");
+        }else {
+
+            //本日のスケジュールデータ設定
             todayList = view.findViewById(R.id.todayScheduleList);
-            todayList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todayScheTitle));
-            todayList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            todayList.setHasFixedSize(true);
+            LinearLayoutManager rLayoutManager = new LinearLayoutManager(requireActivity());
+            rLayoutManager.setOrientation(LinearLayoutManager.VERTICAL); //縦方向に設定
+
+            todayList.setLayoutManager(rLayoutManager);
+            DividerItemDecoration itemDecoration = new DividerItemDecoration(requireActivity(), rLayoutManager.getOrientation());
+            todayList.addItemDecoration(itemDecoration);
+
+
+            MyAdapter adapter = new MyAdapter(todayScheTitle){//リストクリック時の処理
                 @Override
-                public void onItemClick(AdapterView<?> parent, View view,
-                                        int position, long id) {
-                    todayid = Integer.parseInt( todayScheData.get(position).get("id"));
-                    todayEdit.setEnabled(true);
-                    todayDel.setEnabled(true);
-                    todayDelIndex = position;
-                    if(content){ //内容表示モード
-                        Toast.makeText(requireActivity(),todayScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
-                    }
-                    //ToDo 進捗状況入力ダイアログ
-                    if(progress) {
-                        progressLevel = 2;
-                        // フラグメントマネージャーを取得
-                        FragmentManager fragmentManager = getParentFragmentManager();
-
-                        Bundle data = new Bundle();
-                        data.putString("editcontent", todayScheData.get(position).get("memo"));
-                        data.putInt("editProg", Integer.parseInt(todayScheData.get(position).get("proceed")));
-                        data.putInt("editFin", Integer.parseInt(todayScheData.get(position).get("fin")));
-                        data.putString("editTitle", todayScheTitle.get(position));
-                        data.putInt("id", todayid);
-                        ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
-                        dialog.setTargetFragment(ScheduleFragment.this, 0);
-
-                        dialog.show(fragmentManager,"dialog_progress");
-                    }
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onTodayItemClick(view,position,itemData);
                 }
-            });
+            };
+            todayList.setAdapter(adapter);
 
 
-            if(todayScheData.size()==1){
-                layout.setMinHeight(200);
-            }else if(todayScheData.size()==2){
-                layout.setMinHeight(350);
-            }else{
-                layout.setMinHeight(500);
+            //LayoutParamsを取得
+            ViewGroup.LayoutParams params = todayList.getLayoutParams();
+            if (todayScheData.size() == 1) { //リストの項目数で高さを変える
+                params.height = 100;
+            } else if (todayScheData.size() == 2) {
+                params.height = 200;
+            } else if(todayScheData.size() == 3){
+                params.height = 300;
+            } else if(todayScheData.size() == 4){
+                params.height = 400;
+            }else if(todayScheData.size() == 5){
+                params.height = 500;
+            }else if (todayScheData.size() == 6) {
+                params.height = 600;
+            } else if(todayScheData.size() == 7){
+                params.height = 700;
+            }else if(todayScheData.size() == 8){
+                params.height = 800;
+            }else if (todayScheData.size() >= 9) {
+                params.height = 900;
             }
+            todayList.setLayoutParams(params);
 
-            todayDel = view.findViewById(R.id.todayDelButton); //今日のスケジュール用削除ボタンを取得
-            todayDel.setEnabled(false);
-            todayDel.setOnClickListener(new editClicker());
-            todayEdit = view.findViewById(R.id.todayEditButton); //今日のスケジュール用編集ボタンを取得
-            todayEdit.setEnabled(false);
+            todayEdit = (ImageButton) view.findViewById(R.id.todayEditButton);
+            todayEdit.setEnabled(false); //項目選択まで無効化
             todayEdit.setOnClickListener(new editClicker());
+            todayDel = (ImageButton) view.findViewById(R.id.todayDelButton);
+            todayDel.setEnabled(false); //項目選択まで削除ボタン無効化
+            todayDel.setOnClickListener(new editClicker());
 
         }
 
-        pastList = view.findViewById(R.id.pastScheduleList);//過去のスケジュールリスト設定
-        pastList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,pastScheTitle));
-        pastList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                pastid = Integer.parseInt( pastScheData.get(position).get("id"));
-                pastEdit.setEnabled(true);
-                pastDel.setEnabled(true);
-                pastDelIndex = position;
-                if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),pastScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
-                }
-                //ToDo 進捗状況入力ダイアログ
-                if(progress) {
-                    progressLevel = 3;
-                    // フラグメントマネージャーを取得
-                    FragmentManager fragmentManager = getParentFragmentManager();
 
-                    Bundle data = new Bundle();
-                    data.putString("editcontent", pastScheData.get(position).get("memo"));
-                    data.putInt("editProg", Integer.parseInt(pastScheData.get(position).get("proceed")));
-                    data.putInt("editFin", Integer.parseInt(pastScheData.get(position).get("fin")));
-                    data.putString("editTitle", pastScheTitle.get(position));
-                    data.putInt("id", pastid);
-                    ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
-                    dialog.setTargetFragment(ScheduleFragment.this, 0);
+        if(pastScheData.size()==0){ //過去スケジュールがない時レイアウトを消す
+            //レイアウトを取得して消去しブランクにする
+            ConstraintLayout layout;
+            layout = (ConstraintLayout) view.findViewById(R.id.pastScheduleLayout);
+            layout.removeAllViews();
+            getLayoutInflater().inflate(R.layout.non_items, layout);
+            TextView non = layout.findViewById(R.id.noItems);
+            non.setText("過去スケジュールなし");
+        }else {
 
-                    dialog.show(fragmentManager,"dialog_progress");
+            //過去のスケジュールデータ設定
+            pastList = view.findViewById(R.id.pastScheduleList);
+            pastList.setHasFixedSize(true);
+            LinearLayoutManager  rLayoutManager = new LinearLayoutManager(requireActivity());
+            rLayoutManager.setOrientation(LinearLayoutManager.VERTICAL); //縦方向に設定
+
+            pastList.setLayoutManager(rLayoutManager);
+            DividerItemDecoration itemDecoration = new DividerItemDecoration(requireActivity(), rLayoutManager.getOrientation());
+            pastList.addItemDecoration(itemDecoration);
+
+
+            MyAdapter adapter = new MyAdapter(pastScheTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onPastItemClick(view,position,itemData);
                 }
+            };
+            pastList.setAdapter(adapter);
+
+            //LayoutParamsを取得
+            ViewGroup.LayoutParams params = pastList.getLayoutParams();
+            if (pastScheData.size() == 1) { //リストの項目数で高さを変える
+                params.height = 100;
+            } else if (pastScheData.size() == 2) {
+                params.height = 200;
+            } else if(pastScheData.size() == 3){
+                params.height = 300;
+            } else if(pastScheData.size() == 4){
+                params.height = 400;
+            }else if(pastScheData.size() == 5){
+                params.height = 500;
+            }else if (pastScheData.size() == 6) {
+                params.height = 600;
+            } else if(pastScheData.size() == 7){
+                params.height = 700;
+            }else if(pastScheData.size() == 8){
+                params.height = 800;
+            }else if (pastScheData.size() >= 9) {
+                params.height = 900;
             }
-        });
+            pastList.setLayoutParams(params);
 
-        futureDel = view.findViewById(R.id.futureDelButton); //今後のスケジュール用削除ボタンを取得
-        futureDel.setEnabled(false);//初期はボタン無効
-        futureDel.setOnClickListener(new editClicker());
-        futureEdit = view.findViewById(R.id.futureEditButton); //今後のスケジュール用編集ボタンを取得
-        futureEdit.setEnabled(false);//初期はボタン無効
-        futureEdit.setOnClickListener(new editClicker());
+            pastEdit = (ImageButton) view.findViewById(R.id.pastEditButton);
+            pastEdit.setEnabled(false); //項目選択まで無効化
+            pastEdit.setOnClickListener(new editClicker());
+            pastDel = (ImageButton) view.findViewById(R.id.pastDelButton);
+            pastDel.setEnabled(false); //項目選択まで削除ボタン無効化
+            pastDel.setOnClickListener(new editClicker());
 
-        pastDel = view.findViewById(R.id.pastDelButton); //過去のスケジュール用削除ボタンを取得
-        pastDel.setEnabled(false);
-        pastDel.setOnClickListener(new editClicker());
-        pastEdit = view.findViewById(R.id.pastEditButton); //過去のスケジュール用編集ボタンを取得
-        pastEdit.setEnabled(false);
-        pastEdit.setOnClickListener(new editClicker());
+        }
 
         CustomSpinner cspinner = view.findViewById(R.id.modeChange); //編集モード選択スピナー取得
-        String[] spinnerItems = { "標準モード", "内容表示モード", "進捗編集モード" };
+        String[] spinnerItems = { "モード選択","標準モード", "内容表示モード", "進捗編集モード" };
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(),
                 android.R.layout.simple_spinner_item,
                 spinnerItems);
@@ -227,13 +275,13 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) { //大目標選択時のID取得
-                if(position==0){ //標準モード（選択しても表示されない）
+                if(position==1){ //標準モード（選択しても表示されない）
                     content = false;
                     progress = false;
-                }else if(position==1){ //内容表示モード（項目の内容をトースト表示）
+                }else if(position==2){ //内容表示モード（項目の内容をトースト表示）
                     content = true;
                     progress = false;
-                }else{//進捗編集モード（選択した項目の進捗状況を編集）
+                }else if(position==3){//進捗編集モード（選択した項目の進捗状況を編集）
                     content = false;
                     progress = true;
                 }
@@ -247,6 +295,89 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
 
     }
 
+
+    public void onFutureItemClick(View view,int position,String itemData){//今後のスケジュール項目選択時のID取得,処理
+        futureid = Integer.parseInt( futureScheData.get(position).get("id"));
+        futureDelIndex = position;
+        if(content){ //内容表示モード
+            Toast.makeText(requireActivity(),futureScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+        }
+
+        if(progress) {
+            progressLevel = 1;
+            // フラグメントマネージャーを取得
+            FragmentManager fragmentManager = getParentFragmentManager();
+
+            Bundle data = new Bundle();
+            data.putString("editcontent", futureScheData.get(position).get("memo"));
+            data.putInt("editProg", Integer.parseInt(futureScheData.get(position).get("proceed")));
+            data.putInt("editFin", Integer.parseInt(futureScheData.get(position).get("fin")));
+            data.putString("editTitle", futureScheTitle.get(position));
+            data.putInt("id", futureid);
+            ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
+            dialog.setTargetFragment(ScheduleFragment.this, 0);
+
+            dialog.show(fragmentManager,"dialog_progress");
+        }
+        futureEdit.setEnabled(true);
+        futureDel.setEnabled(true);
+    }
+
+    public void onTodayItemClick(View view,int position,String itemData){//本日のスケジュール標項目選択時のID取得,処理
+        todayid = Integer.parseInt( todayScheData.get(position).get("id"));
+        todayDelIndex = position;
+        if(content){ //内容表示モード
+            Toast.makeText(requireActivity(),todayScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+        }
+        //ToDo 進捗状況入力ダイアログ
+        if(progress) {
+            progressLevel = 2;
+            // フラグメントマネージャーを取得
+            FragmentManager fragmentManager = getParentFragmentManager();
+
+            Bundle data = new Bundle();
+            data.putString("editcontent", todayScheData.get(position).get("memo"));
+            data.putInt("editProg", Integer.parseInt(todayScheData.get(position).get("proceed")));
+            data.putInt("editFin", Integer.parseInt(todayScheData.get(position).get("fin")));
+            data.putString("editTitle", todayScheTitle.get(position));
+            data.putInt("id", todayid);
+            ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
+            dialog.setTargetFragment(ScheduleFragment.this, 0);
+
+            dialog.show(fragmentManager,"dialog_progress");
+        }
+        todayEdit.setEnabled(true);
+        todayDel.setEnabled(true);
+    }
+
+    public void onPastItemClick(View view,int position,String itemData){//過去スケジュール項目選択時のID取得,処理
+        pastid = Integer.parseInt( pastScheData.get(position).get("id"));
+        pastDelIndex = position;
+        if(content){ //内容表示モード
+            Toast.makeText(requireActivity(),pastScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+        }
+        //ToDo 進捗状況入力ダイアログ
+        if(progress) {
+            progressLevel = 3;
+            // フラグメントマネージャーを取得
+            FragmentManager fragmentManager = getParentFragmentManager();
+
+            Bundle data = new Bundle();
+            data.putString("editcontent", pastScheData.get(position).get("memo"));
+            data.putInt("editProg", Integer.parseInt(pastScheData.get(position).get("proceed")));
+            data.putInt("editFin", Integer.parseInt(pastScheData.get(position).get("fin")));
+            data.putString("editTitle", pastScheTitle.get(position));
+            data.putInt("id", pastid);
+            ProgressDialogFragment dialog = ProgressDialogFragment.newInstance(data);
+            dialog.setTargetFragment(ScheduleFragment.this, 0);
+
+            dialog.show(fragmentManager,"dialog_progress");
+        }
+        pastEdit.setEnabled(true);
+        pastDel.setEnabled(true);
+    }
+
+
     //データ削除確定時の処理
     @Override
     public void onDelDialogPositiveClick(DialogFragment dialog) {
@@ -256,16 +387,32 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                 if(dlevel.equals("fSchedule")){ //データ削除成功時、配列からも消す
                         futureScheData.remove(futureDelIndex);
                         futureScheTitle.remove(futureDelIndex);
-                        futureList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,futureScheTitle));
-                        futureEdit.setEnabled(false);//ボタンを無効化
-                        futureDel.setEnabled(false);
+
+                    MyAdapter adapter = new MyAdapter(futureScheTitle){//リストクリック時の処理
+                        @Override
+                        void onRecycleItemClick(View view, int position, String itemData) {
+                            onFutureItemClick(view,position,itemData);
+                        }
+                    };
+                    futureList.setAdapter(adapter);
+                    futureid = 0;
+                    futureEdit.setEnabled(false);//ボタンを無効化
+                    futureDel.setEnabled(false);
                     futureDelIndex=0; //削除するデータのインデックスリセット
 
                 }
                else if(dlevel.equals("tSchedule")){ //データ削除成功時、配列からも消す
                     todayScheData.remove(todayDelIndex);
                     todayScheTitle.remove(todayDelIndex);
-                    todayList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todayScheTitle));
+
+                    MyAdapter adapter = new MyAdapter(todayScheTitle){//リストクリック時の処理
+                        @Override
+                        void onRecycleItemClick(View view, int position, String itemData) {
+                            onTodayItemClick(view,position,itemData);
+                        }
+                    };
+                    todayList.setAdapter(adapter);
+                    todayid = 0;
                     todayEdit.setEnabled(false);//ボタンを無効化
                     todayDel.setEnabled(false);
                     todayDelIndex=0; //削除するデータのインデックスリセット
@@ -274,7 +421,15 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                 else if(dlevel.equals("pSchedule")){ //データ削除成功時、配列からも消す
                     pastScheData.remove(pastDelIndex);
                     pastScheTitle.remove(pastDelIndex);
-                    pastList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,pastScheTitle));
+
+                    MyAdapter adapter = new MyAdapter(pastScheTitle){//リストクリック時の処理
+                        @Override
+                        void onRecycleItemClick(View view, int position, String itemData) {
+                            onPastItemClick(view,position,itemData);
+                        }
+                    };
+                    pastList.setAdapter(adapter);
+                    pastid = 0;
                     pastEdit.setEnabled(false);//ボタンを無効化
                     pastDel.setEnabled(false);
                     pastDelIndex=0; //削除するデータのインデックスリセット
@@ -300,7 +455,6 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
         int id = data.getInt("id");
         int fin = data.getInt("fin");
 
-        ContentValues logcv = new ContentValues(); //ログ情報用のContentValues
         ContentValues cv = new ContentValues();
         try(SQLiteDatabase db = helper.getReadableDatabase()){
             Cursor cs = db.query("ToDoData",null,"id=?",new String[]{""+id},null,null,null,null );
@@ -338,38 +492,6 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                 cv.put("memo", memo);
                 cv.put("proceed", proceed);
                 cv.put("fin",fin);
-                logcv.put("id",id);
-                logcv.put("ope","update");
-                logcv.put("beforetitle",cs.getString(ltitle));
-                logcv.put("beforelevel",cs.getString(llevel));
-                logcv.put("beforehold",cs.getInt(lhold));
-                logcv.put("beforebig",cs.getInt(lbig));
-                logcv.put("beforebigtitle",cs.getString(lbigtitle));
-                logcv.put("beforebighold",cs.getInt(lbighold));
-                logcv.put("beforemiddle",cs.getInt(lmiddle));
-                logcv.put("beforemiddletitle",cs.getString(lmiddletitle));
-                logcv.put("beforemiddlehold",cs.getInt(lmiddlehold));
-                logcv.put("beforedate",cs.getString(ldate));
-                logcv.put("beforecontent",cs.getString(lcontent));
-                logcv.put("beforeimportant",cs.getInt(limportant));
-                logcv.put("beforememo",cs.getString(lmemo));
-                logcv.put("beforeproceed",cs.getString(lproceed));
-                logcv.put("beforefin",cs.getString(lfin));
-                logcv.put("aftertitle",cs.getString(ltitle));
-                logcv.put("afterlevel",cs.getString(llevel));
-                logcv.put("afterhold",""+cs.getInt(lhold));
-                logcv.put("afterbig",cs.getInt(lbig));
-                logcv.put("afterbigtitle",cs.getString(lbigtitle));
-                logcv.put("afterbighold",cs.getInt(lbighold));
-                logcv.put("aftermiddle",cs.getInt(lmiddle));
-                logcv.put("aftermiddletitle",cs.getString(lmiddletitle));
-                logcv.put("aftermiddlehold",cs.getInt(lmiddlehold));
-                logcv.put("afterdate",cs.getString(ldate));
-                logcv.put("aftercontent",cs.getString(lcontent));
-                logcv.put("afterimportant",cs.getInt(limportant));
-                logcv.put("aftermemo",memo);
-                logcv.put("afterproceed",proceed);
-                logcv.put("afterfin",fin);
 
             }
         }
@@ -380,13 +502,6 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
             try {
                 db.insertWithOnConflict("ToDoData", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
 
-                db.insert("LogData",null,logcv);
-
-                Cursor lcs = db.query("LogData",new String[]{"logid"},null,null,null,null,null,null);
-                if(lcs.getCount()>300){ //ログ件数が３００件を超えたら古いのから削除
-                    String dsql = "delete from LogData order by logid asc limit "+(lcs.getCount()-300);
-                    db.execSQL(dsql);
-                }
 
                 db.setTransactionSuccessful();
             } catch (SQLException e) {
@@ -426,7 +541,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                             HashMap<String,String> item = new HashMap<>();
                             item.put("id",""+schecs.getInt(0));
                             item.put("title",schecs.getString(1));
-                            item.put("date",""+schecs.getString(2));
+                            item.put("date",schecs.getString(2));
                             item.put("content",schecs.getString(3));
                             item.put("important",""+schecs.getInt(4));
                             item.put("memo",schecs.getString(5));
@@ -444,7 +559,14 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
 
                         next = schecs.moveToNext();
                     }
-                    futureList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,futureScheTitle));
+
+                    MyAdapter adapter = new MyAdapter(futureScheTitle){//リストクリック時の処理
+                        @Override
+                        void onRecycleItemClick(View view, int position, String itemData) {
+                            onFutureItemClick(view,position,itemData);
+                        }
+                    };
+                    futureList.setAdapter(adapter);
                     futureEdit.setEnabled(false);
                     futureDel.setEnabled(false);
 
@@ -507,7 +629,14 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
 
                         next = schecs.moveToNext();
                     }
-                    todayList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,todayScheTitle));
+
+                    MyAdapter adapter = new MyAdapter(todayScheTitle){//リストクリック時の処理
+                        @Override
+                        void onRecycleItemClick(View view, int position, String itemData) {
+                            onTodayItemClick(view,position,itemData);
+                        }
+                    };
+                    todayList.setAdapter(adapter);
                     todayEdit.setEnabled(false);
                     todayDel.setEnabled(false);
 
@@ -569,7 +698,14 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
 
                         next = schecs.moveToNext();
                     }
-                    pastList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,pastScheTitle));
+
+                    MyAdapter adapter = new MyAdapter(pastScheTitle){//リストクリック時の処理
+                        @Override
+                        void onRecycleItemClick(View view, int position, String itemData) {
+                            onPastItemClick(view,position,itemData);
+                        }
+                    };
+                    pastList.setAdapter(adapter);
                     pastEdit.setEnabled(false);
                     pastDel.setEnabled(false);
 
@@ -645,7 +781,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                 dlevel = "fSchedule";
                 did = futureid;
 
-                //ToDo 削除確認ダイアログへ飛ぶ
+                // 削除確認ダイアログへ飛ぶ
 
                 // フラグメントマネージャーを取得
                 FragmentManager fragmentManager = getParentFragmentManager();
@@ -660,7 +796,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                 editData.putString("level","schedule");
                 dlevel = "tSchedule";
                 did = todayid;
-                //ToDo 削除確認ダイアログへ飛ぶ
+                // 削除確認ダイアログへ飛ぶ
 
                 // フラグメントマネージャーを取得
                 FragmentManager fragmentManager = getParentFragmentManager();

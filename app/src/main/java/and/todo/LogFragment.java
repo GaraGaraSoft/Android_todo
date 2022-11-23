@@ -110,9 +110,9 @@ public class LogFragment extends Fragment {
             String beforedate = logData.get(selectId).get("afterdate");
             String beforecontent = logData.get(selectId).get("aftercontent");
             int beforeimportant = Integer.parseInt(logData.get(selectId).get("afterimportant"));
-            String beforememo = logData.get(selectId).get("aftermemo");
-            int beforeproceed = Integer.parseInt(logData.get(selectId).get("afterproceed"));
-            int beforefin = Integer.parseInt(logData.get(selectId).get("afterfin"));
+            String beforememo = logData.get(selectId).get("beforememo"); //メモ,進捗度,終了判定はそのまま
+            int beforeproceed = Integer.parseInt(logData.get(selectId).get("beforeproceed"));
+            int beforefin = Integer.parseInt(logData.get(selectId).get("beforefin"));
             String aftertitle = logData.get(selectId).get("beforetitle");
             String afterlevel = logData.get(selectId).get("beforelevel");
             int afterhold = Integer.parseInt(logData.get(selectId).get("beforehold"));
@@ -125,9 +125,9 @@ public class LogFragment extends Fragment {
             String afterdate = logData.get(selectId).get("beforedate");
             String aftercontent = logData.get(selectId).get("beforecontent");
             int afterimportant = Integer.parseInt(logData.get(selectId).get("beforeimportant"));
-            String aftermemo = logData.get(selectId).get("beforememo");
-            int afterproceed = Integer.parseInt(logData.get(selectId).get("beforeproceed"));
-            int afterfin = Integer.parseInt(logData.get(selectId).get("beforefin"));
+            String aftermemo = logData.get(selectId).get("aftermemo");//メモ,進捗度,終了判定はそのまま
+            int afterproceed = Integer.parseInt(logData.get(selectId).get("afterproceed"));
+            int afterfin = Integer.parseInt(logData.get(selectId).get("afterfin"));
 
             if(logData.get(selectId).get("ope").equals("insert")){ //データ挿入ログの大中目標データを確認
                 ope = "delete";

@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
-        ImageButton sche = menuLayout.findViewById(R.id.scheButton);
+        Button sche = menuLayout.findViewById(R.id.scheButton);
         sche.setOnClickListener(v->{
             //スケジュール画面へ飛ばす
 
