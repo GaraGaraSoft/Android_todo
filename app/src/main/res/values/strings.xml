@@ -36,6 +36,7 @@
     <string name="holdtitle">保留データ一覧</string>
     <string name="logtitle">編集ログ情報</string>
     <string name="logNum">ログ(No.%d～No.%d)まで表示</string>
-    <string name="inputdate">〇〇〇〇/××/△△の形で記入</string>
-    <string name="logback">ログを戻す</string>
+    <string name="inputdate">〇〇〇〇-××-△△の形で記入</string>
+    <string name="logback">ログ復元</string>
+    <string name="modeselecter">モード選択</string>
 </resources>

@@ -54,7 +54,7 @@ public class DateDialogFragment extends DialogFragment{
 
         EditText editDate = activity.findViewById(R.id.editDate); //日付入力
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         try{
             cal.setTime(sdf.parse(editDate.getText().toString()));
 

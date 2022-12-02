@@ -75,6 +75,29 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        View decor = requireActivity().getWindow().getDecorView();//バーを含めたぜびゅー全体
+
+        ConstraintLayout top = view.findViewById(R.id.scheConstraint);
+        top.setOnClickListener(v-> {
+
+            if(decor.getSystemUiVisibility() == 0) {//アクションバーに表示されているとき
+
+                decor.setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                |View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                );
+            }else{
+
+                decor.setSystemUiVisibility(0);
+            }
+
+        });
+
+
         helper = new EditDatabaseHelper(requireActivity());
 
         getSchedule(); //スケジュールデータを取得する
@@ -300,7 +323,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
         futureid = Integer.parseInt( futureScheData.get(position).get("id"));
         futureDelIndex = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),futureScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+            Toast.makeText(requireActivity(),futureScheTitle.get(position)+"の内容:\n"+futureScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
         }
 
         if(progress) {
@@ -327,7 +350,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
         todayid = Integer.parseInt( todayScheData.get(position).get("id"));
         todayDelIndex = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),todayScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+            Toast.makeText(requireActivity(),todayScheTitle.get(position)+"の内容:\n"+todayScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
         }
         //ToDo 進捗状況入力ダイアログ
         if(progress) {
@@ -354,7 +377,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
         pastid = Integer.parseInt( pastScheData.get(position).get("id"));
         pastDelIndex = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),pastScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+            Toast.makeText(requireActivity(),pastScheTitle.get(position)+"の内容:\n"+pastScheData.get(position).get("content"),Toast.LENGTH_LONG).show();
         }
         //ToDo 進捗状況入力ダイアログ
         if(progress) {
@@ -531,7 +554,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                     //Calendarクラスのオブジェクトを生成する
                     Calendar cl = Calendar.getInstance();
                     //本日の日付データを取得
-                    String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
+                    String today = String.format(Locale.JAPAN,"%02d-%02d-%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
 
                     boolean next = schecs.moveToFirst();//カーソルの先頭に移動
                     while(next){
@@ -601,7 +624,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                     //Calendarクラスのオブジェクトを生成する
                     Calendar cl = Calendar.getInstance();
                     //本日の日付データを取得
-                    String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
+                    String today = String.format(Locale.JAPAN,"%02d-%02d-%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
 
                     boolean next = schecs.moveToFirst();//カーソルの先頭に移動
                     while(next){
@@ -670,7 +693,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                     //Calendarクラスのオブジェクトを生成する
                     Calendar cl = Calendar.getInstance();
                     //本日の日付データを取得
-                    String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
+                    String today = String.format(Locale.JAPAN,"%02d-%02d-%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
 
                     boolean next = schecs.moveToFirst();//カーソルの先頭に移動
                     while(next){
@@ -853,7 +876,7 @@ public class ScheduleFragment extends Fragment implements ProgressDialogFragment
                 //Calendarクラスのオブジェクトを生成する
                 Calendar cl = Calendar.getInstance();
                 //本日の日付データを取得
-                String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
+                String today = String.format(Locale.JAPAN,"%02d-%02d-%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
 
                 boolean next = schecs.moveToFirst();//カーソルの先頭に移動
                 while(next){

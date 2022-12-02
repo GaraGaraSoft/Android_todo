@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.Locale;
 
 @SuppressWarnings("all") //ToDo　後で削除してできるかぎり警告文修正
-public class TopFragment extends Fragment implements ProgressDialogFragment.ProgressDialogListener,DelDialogFragment.DelDialogListener { //目標・スケジュール一覧画面
+public class TopFragment extends Fragment implements ProgressDialogFragment.ProgressDialogListener,DelDialogFragment.DelDialogListener,DailyDialogFragment.DailyDialogListener { //目標・スケジュール一覧画面
     private EditDatabaseHelper helper;
     ArrayList<String> bigTitle = new ArrayList<>(); //表示する大目標のタイトルを保管する配列
     ArrayList<HashMap<String,String>> bigData = new ArrayList<>(); //表示する大目標データを保管するための配列
@@ -50,16 +50,25 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
     ArrayList<HashMap<String,String>> scheData = new ArrayList<>();//表示するスケジュールデータを保管するための配列
     ArrayList<String> todoTitle = new ArrayList<>();
     ArrayList<HashMap<String,String>> todoData = new ArrayList<>(); //表示するやることリストデータを保管するための配列
+    ArrayList<Integer> smallRoutineData = new ArrayList<>(); //その日に完了した小目標タスクのデータ配列
+    ArrayList<Integer> todoRoutineData = new ArrayList<>(); //その日に完了したTODOタスクのデータ配列
     int bid=0,mid=0,sid=0,scheid=0,todoid=0;//項目選択時のID保管用変数
     ImageButton bedit,medit,sedit,scheedit,todoedit;//各編集ボタン変数
     ImageButton bdl,mdl,sdl,schedl,tododl;//各削除ボタン変数
     private boolean content = false; //内容表示モード判定
     private boolean progress = false; //進捗モード判定
+    private boolean daily = false;//デイリールーティンチェック判定
+    private boolean dailydone = false; //日課タスク終了時に作業量も入力するモード
     private int progressLevel = 0;//進捗編集した項目判定変数
     DeleteData del = null; //データ削除用クラス
     int bigDel=0,middleDel=0,smallDel=0,scheDel=0,todoDel=0; //データ削除時に配列から消去するための配列インデックス変数
     String dlevel; //削除のデータの目標
     int did=0;//削除するデータのID
+    String dailylevel;
+    private boolean bigFinReset=false,middlFinReset=false;//大中目標完了後一番上の項目設定し直されたときの進捗状況ダイアログ防止変数
+
+    String today;//本日の日付データを取得
+
 
     CustomSpinner bigTarget,middleTarget; //大中目標のスピナー変数
     RecyclerView sList,scheList,todoList; //小目標スケジュールのリスト変数
@@ -95,6 +104,35 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
         //ToDo　Listの最大数と複数ページに変更
         //ToDo　最初の数十件以降はスクロールしたら読み込み
+        //ToDo ワンクリックで保留に移動するボタン
+        //ToDo ワンクリックで完了に移動するボタン
+
+        //Calendarクラスのオブジェクトを生成する
+        Calendar cl = Calendar.getInstance();
+        //本日の日付データを取得
+        today = String.format(Locale.JAPAN,"%02d-%02d-%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
+
+        View decor = requireActivity().getWindow().getDecorView();//アクションバー含む全ビュー取得
+
+        ConstraintLayout top = view.findViewById(R.id.topConstraint);
+        top.setOnClickListener(v-> {
+
+            if(decor.getSystemUiVisibility() == 0) {//アクションバーを隠す
+
+                decor.setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                |View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                );
+            }else{//アクションバーを再表示
+
+                decor.setSystemUiVisibility(0);
+            }
+
+        });
 
         //Bundleデータ取得
         Bundle Data = getArguments();
@@ -108,6 +146,23 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
         del = new DeleteData(requireActivity()); //削除用クラスのインスタンス生成
 
+        Button dailyButton = view.findViewById(R.id.dailyTask);
+        dailyButton.setOnClickListener(v->{
+            //日々のタスクの達成量確認画面へ
+
+            // BackStackを設定
+            FragmentManager fragmentManager = getParentFragmentManager();
+            // FragmentTransactionのインスタンスを取得
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.addToBackStack(null);
+
+            // パラメータを設定
+            fragmentTransaction.replace(R.id.MainFragment,
+                    new DailyLogFragment());
+            fragmentTransaction.commit();
+
+        });
+
         //大目標にデータ設定
         bigTarget = (CustomSpinner) view.findViewById(R.id.bigTarget);
         ArrayAdapter<String> bAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
@@ -119,9 +174,10 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 bid = Integer.parseInt( bigData.get(position).get("id"));
                 bigDel = position;
                 if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),bigData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity(),bigTitle.get(position)+"の内容:\n"+bigData.get(position).get("content"),Toast.LENGTH_LONG).show();
                 }
-                if(progress) { //進捗状況編集モード
+
+                if(progress && bigFinReset == false) { //進捗状況編集モード
                     progressLevel = 1;
                     // フラグメントマネージャーを取得
                     FragmentManager fragmentManager = getParentFragmentManager();
@@ -137,7 +193,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
                     dialog.show(fragmentManager,"dialog_progress");
                 }
-
+                bigFinReset = false;
             }
 
             @Override
@@ -160,9 +216,10 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 mid = Integer.parseInt( middleData.get(position).get("id"));
                 middleDel = position;
                 if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),middleData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity(),middleTitle.get(position)+"の内容:\n"+middleData.get(position).get("content"),Toast.LENGTH_LONG).show();
                 }
-                if(progress) {
+
+                if(progress && middlFinReset == false) {
                     progressLevel = 2;
                     // フラグメントマネージャーを取得
                     FragmentManager fragmentManager = getParentFragmentManager();
@@ -178,6 +235,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
                     dialog.show(fragmentManager,"dialog_progress");
                 }
+                middlFinReset = false;
 
             }
 
@@ -255,7 +313,6 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
         }
 
-        //ToDo その日の予定数によってスケジュールの大きさ変更
 
         if(scheData.size()==0){ //スケジュールがないとき当日のスケジュール枠を消す
             //レイアウトを取得して消去しブランクにする
@@ -386,7 +443,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
         }
 
         CustomSpinner cspinner = view.findViewById(R.id.modeChange); //編集モード選択スピナー取得
-        String[] spinnerItems = { "モード選択","標準モード", "内容表示モード", "進捗編集モード" };
+        String[] spinnerItems = { "標準モード", "内容表示モード", "進捗編集モード","日課タスク終了","日課タスク作業量入力" };
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(),
                 android.R.layout.simple_spinner_item,
                 spinnerItems);
@@ -395,15 +452,31 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) { //大目標選択時のID取得
-                if(position==1){ //標準モード（選択しても表示されない）
+                if(position==0){ //標準モード（全モードリセット）
                     content = false;
                     progress = false;
-                }else if(position==2){ //内容表示モード（項目の内容をトースト表示）
+                    daily = false;
+                    dailydone = false;
+                }else if(position==1){ //内容表示モード（項目の内容をトースト表示）
                     content = true;
                     progress = false;
-                }else if(position==3){//進捗編集モード（選択した項目の進捗状況を編集）
+                    daily = false;
+                    dailydone = false;
+                }else if(position==2){//進捗編集モード（選択した項目の進捗状況を編集）
                     content = false;
                     progress = true;
+                    daily = false;
+                    dailydone = false;
+                }else if(position==3){//デイリールーティンチェック（選択した項目を当日のタスク欄から消す）
+                    content = false;
+                    progress = false;
+                    daily = true;
+                    dailydone = false;
+                }else if(position==4){
+                    content = false;
+                    progress = false;
+                    daily = false;
+                    dailydone = true;
                 }
             }
 
@@ -525,7 +598,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 fragmentTransaction.commit();
 
             }else if(view == bdl || view == mdl || view == sdl || view == schedl || view == tododl){
-                //ToDo 削除確認ダイアログへ飛ぶ
+                //削除確認ダイアログへ飛ぶ
 
                 // フラグメントマネージャーを取得
                 FragmentManager fragmentManager = getParentFragmentManager();
@@ -544,10 +617,8 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
         sid = Integer.parseInt( smallData.get(position).get("id"));
         smallDel = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
-        }
-        //ToDo 進捗状況入力ダイアログ
-        if(progress) {
+            Toast.makeText(requireActivity(),smallTitle.get(position)+"の内容:\n"+smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
+        }else if(progress) {//進捗状況入力ダイアログ
             progressLevel = 3;
             // フラグメントマネージャーを取得
             FragmentManager fragmentManager = getParentFragmentManager();
@@ -565,13 +636,31 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
         }
         sedit.setEnabled(true); //編集ボタン有効化
         sdl.setEnabled(true); //削除ボタン有効化
+        if(daily){ //デイリールーティンチェック
+            //ToDo チェックしたデータをデイリーデータに登録して配列から削除、当日は出ないようにする
+            dailyRoutineClick("s"); //データベースに登録する
+
+        }else if(dailydone){
+            dailylevel = "s";
+            // フラグメントマネージャーを取得
+            FragmentManager fragmentManager = getParentFragmentManager();
+
+            Bundle data = new Bundle();
+            data.putString("title", smallTitle.get(position));
+            data.putString("editContent", "");
+            data.putInt("id",0);
+            DailyDialogFragment dialog = DailyDialogFragment.newInstance(data);
+            dialog.setTargetFragment(TopFragment.this, 0);
+
+            dialog.show(fragmentManager,"dialog_topdaily");
+        }
     }
 
     public void onScheItemClick(View view,int position,String itemData){ //スケジュール項目選択時のID取得,処理
         scheid = Integer.parseInt( scheData.get(position).get("id"));
         scheDel = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),scheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+            Toast.makeText(requireActivity(),scheTitle.get(position)+"の内容:\n"+scheData.get(position).get("content"),Toast.LENGTH_LONG).show();
         }
         if(progress) {
             progressLevel =4;
@@ -598,9 +687,8 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
         todoid = Integer.parseInt( todoData.get(position).get("id") );
         todoDel = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
-        }
-        if(progress) {
+            Toast.makeText(requireActivity(),todoTitle.get(position)+"の内容:\n"+todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
+        }else if(progress) {
             progressLevel =5;
             // フラグメントマネージャーを取得
             FragmentManager fragmentManager = getParentFragmentManager();
@@ -618,6 +706,23 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
         }
         todoedit.setEnabled(true);
         tododl.setEnabled(true);
+        if(daily){ //デイリールーティンチェック
+            //ToDo チェックしたデータをデイリーデータに登録して配列から削除、当日は出ないようにする
+            dailyRoutineClick("t"); //データベースに登録する
+
+        }else if(dailydone){
+            dailylevel = "t";
+            // フラグメントマネージャーを取得
+            FragmentManager fragmentManager = getParentFragmentManager();
+
+            Bundle data = new Bundle();
+            data.putString("title", todoTitle.get(position));
+            data.putString("editContent", "");
+            DailyDialogFragment dialog = DailyDialogFragment.newInstance(data);
+            dialog.setTargetFragment(TopFragment.this, 0);
+
+            dialog.show(fragmentManager,"dialog_topdaily");
+        }
     }
 
     //データ削除確定時の処理
@@ -767,6 +872,137 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
     public void onDelDialogNeutralClick(DialogFragment dialog) {
     }
 
+    public void dailyRoutineClick(String level){ //当日の作業が終わった時の処理
+
+        //当日完了済みの日課タスクをDailyDataに記録
+        try(SQLiteDatabase db = helper.getWritableDatabase()) {
+            db.beginTransaction();
+            try {
+                //クリックしたデータの各情報を入力するContentValues
+                ContentValues cv = new ContentValues();
+                if (level.equals("s")){
+                    cv.put("dailytaskid",sid);
+                    cv.put("dailytasktitle",smallTitle.get(smallDel));
+                }
+                else if(level.equals("t")){
+                    cv.put("dailytaskid",todoid);
+                    cv.put("dailytasktitle",todoTitle.get(todoDel));
+                }
+
+                cv.put("date",today);//本日の日付データ入力
+                cv.put("level",level);
+                cv.put("dailycontent","");
+
+                db.insert("DailyData", null, cv);
+
+                db.setTransactionSuccessful();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                db.endTransaction();
+            }
+        }
+
+        //当日のデータ配列から削除
+        if(level.equals("s")){
+            smallData.remove(smallDel);
+            smallTitle.remove(smallDel);
+
+            MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onSmallItemClick(view,position,itemData);
+                }
+            };
+            sList.setAdapter(adapter);
+            sid = 0;
+            sedit.setEnabled(false); //ボタンを無効化
+            sdl.setEnabled(false);
+
+            smallDel = 0;
+        }else if(level.equals("t")){
+            todoData.remove(todoDel);
+            todoTitle.remove(todoDel);
+            MyAdapter adapter = new MyAdapter(todoTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onToDoItemClick(view,position,itemData);
+                }
+            };
+            todoList.setAdapter(adapter);
+            todoid = 0;
+            todoedit.setEnabled(false);//ボタンを無効化
+            tododl.setEnabled(false);
+
+            todoDel = 0;
+        }
+    }
+
+    @Override
+    public void onDailyDialogPositiveClick(DialogFragment dialog, Bundle data) { //日々のタスクを内容含めて編集後の処理
+
+        ContentValues cv = new ContentValues();
+        try(SQLiteDatabase db = helper.getWritableDatabase()){
+            db.beginTransaction();
+            try{
+
+                if (dailylevel.equals("s")){
+                    cv.put("dailytaskid",sid);
+                    cv.put("dailytasktitle",smallTitle.get(smallDel));
+                }
+                else if(dailylevel.equals("t")){
+                    cv.put("dailytaskid",todoid);
+                    cv.put("dailytasktitle",todoTitle.get(todoDel));
+                }
+
+                cv.put("date",today);//本日の日付データ入力
+                cv.put("level",dailylevel);
+                cv.put("dailycontent",data.getString("editcontent"));
+
+                db.insert("DailyData", null, cv);
+
+                db.setTransactionSuccessful();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                db.endTransaction();
+            }
+
+        }
+        //当日のデータ配列から削除
+        if(dailylevel.equals("s")){
+            smallData.remove(smallDel);
+            smallTitle.remove(smallDel);
+
+            MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onSmallItemClick(view,position,itemData);
+                }
+            };
+            sList.setAdapter(adapter);
+            sid = 0;
+            sedit.setEnabled(false); //ボタンを無効化
+            sdl.setEnabled(false);
+
+            smallDel = 0;
+        }else if(dailylevel.equals("t")){
+            todoData.remove(todoDel);
+            todoTitle.remove(todoDel);
+            MyAdapter adapter = new MyAdapter(todoTitle){//リストクリック時の処理
+                @Override
+                void onRecycleItemClick(View view, int position, String itemData) {
+                    onToDoItemClick(view,position,itemData);
+                }
+            };
+            todoList.setAdapter(adapter);
+            todoid = 0;
+            todoedit.setEnabled(false);//ボタンを無効化
+            tododl.setEnabled(false);
+
+            todoDel = 0;
+        }
+    }
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog,Bundle data) { //進捗度編集後の処理
@@ -876,7 +1112,8 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                     if(bigData.size()>0){ //大目標データ存在時、一番上に戻す
                         bigDel = 0;
                         bid = Integer.parseInt(bigData.get(0).get("id"));
-                        bigTarget.setSelection(0);
+                        //大目標を完了にしたときの初期化での進捗状況出現対策
+                        bigFinReset = true;
                     }else{ //大目標がないときは編集削除ボタンを無効化
                         bedit.setEnabled(false);
                         bdl.setEnabled(false);
@@ -912,7 +1149,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                         if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
                             middleDel = 0;
                             mid = Integer.parseInt(middleData.get(0).get("id"));
-                            middleTarget.setSelection(0);
+                            middlFinReset = true;
                         }else{ //中目標がないときは編集削除ボタンを無効化
                             medit.setEnabled(false);
                             mdl.setEnabled(false);
@@ -925,25 +1162,35 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                         smallData.clear(); //いったん配列を空にする
                         smallTitle.clear();
                         next = scs.moveToFirst();//カーソルの先頭に移動
+                        int smallId;
                         while (next) {
-                            HashMap<String, String> item = new HashMap<>();
-                            item.put("id", "" + scs.getInt(0));
-                            item.put("title", scs.getString(1));
-                            item.put("big", "" + scs.getInt(2));
-                            item.put("bigtitle", scs.getString(3));
-                            item.put("bighold", "" + scs.getInt(4));
-                            item.put("middle", "" + scs.getInt(5));
-                            item.put("middletitle", scs.getString(6));
-                            item.put("middlehold", "" + scs.getInt(7));
-                            item.put("content", scs.getString(8));
-                            item.put("important", "" + scs.getInt(9));
-                            item.put("memo", scs.getString(10));
-                            item.put("proceed", "" + scs.getInt(11));
-                            item.put("fin", "" + scs.getInt(12));
+                            through:
+                            {
+                                smallId = scs.getInt(0);
+                                for (int i = 0; i < smallRoutineData.size(); i++) {
+                                    if (smallId == smallRoutineData.get(i)) { //小目標に本日こなしたタスクがあれば飛ばす
+                                        break through;
+                                    }
+                                }
+                                HashMap<String, String> item = new HashMap<>();
+                                item.put("id", "" + smallId);
+                                item.put("title", scs.getString(1));
+                                item.put("big", "" + scs.getInt(2));
+                                item.put("bigtitle", scs.getString(3));
+                                item.put("bighold", "" + scs.getInt(4));
+                                item.put("middle", "" + scs.getInt(5));
+                                item.put("middletitle", scs.getString(6));
+                                item.put("middlehold", "" + scs.getInt(7));
+                                item.put("content", scs.getString(8));
+                                item.put("important", "" + scs.getInt(9));
+                                item.put("memo", scs.getString(10));
+                                item.put("proceed", "" + scs.getInt(11));
+                                item.put("fin", "" + scs.getInt(12));
 
-                            smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
+                                smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
 
-                            smallData.add(item); //中目標データ配列に追加
+                                smallData.add(item); //中目標データ配列に追加
+                            }
                             next = scs.moveToNext();
                         }
 
@@ -1003,7 +1250,8 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                     if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
                         middleDel = 0;
                         mid = Integer.parseInt(middleData.get(0).get("id"));
-                        middleTarget.setSelection(0);
+                        //中目標完了時の初期化での進捗再表示対策
+                        middlFinReset = true;
                     }else{ //中目標がないときは編集削除ボタンを無効化
                         medit.setEnabled(false);
                         mdl.setEnabled(false);
@@ -1017,25 +1265,36 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                         smallData.clear(); //いったん配列を空にする
                         smallTitle.clear();
                         next = scs.moveToFirst();//カーソルの先頭に移動
+                        int smallId;
                         while (next) {
-                            HashMap<String, String> item = new HashMap<>();
-                            item.put("id", "" + scs.getInt(0));
-                            item.put("title", scs.getString(1));
-                            item.put("big", "" + scs.getInt(2));
-                            item.put("bigtitle", scs.getString(3));
-                            item.put("bighold", "" + scs.getInt(4));
-                            item.put("middle", "" + scs.getInt(5));
-                            item.put("middletitle", scs.getString(6));
-                            item.put("middlehold", "" + scs.getInt(7));
-                            item.put("content", scs.getString(8));
-                            item.put("important", "" + scs.getInt(9));
-                            item.put("memo", scs.getString(10));
-                            item.put("proceed", "" + scs.getInt(11));
-                            item.put("fin", "" + scs.getInt(12));
 
-                            smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
+                            through:
+                            {
+                                smallId = scs.getInt(0);
+                                for (int i = 0; i < smallRoutineData.size(); i++) {
+                                    if (smallId == smallRoutineData.get(i)) { //小目標に本日こなしたタスクがあれば飛ばす
+                                        break through;
+                                    }
+                                }
+                                HashMap<String, String> item = new HashMap<>();
+                                item.put("id", "" + smallId);
+                                item.put("title", scs.getString(1));
+                                item.put("big", "" + scs.getInt(2));
+                                item.put("bigtitle", scs.getString(3));
+                                item.put("bighold", "" + scs.getInt(4));
+                                item.put("middle", "" + scs.getInt(5));
+                                item.put("middletitle", scs.getString(6));
+                                item.put("middlehold", "" + scs.getInt(7));
+                                item.put("content", scs.getString(8));
+                                item.put("important", "" + scs.getInt(9));
+                                item.put("memo", scs.getString(10));
+                                item.put("proceed", "" + scs.getInt(11));
+                                item.put("fin", "" + scs.getInt(12));
 
-                            smallData.add(item); //中目標データ配列に追加
+                                smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
+
+                                smallData.add(item); //中目標データ配列に追加
+                            }
                             next = scs.moveToNext();
                         }
                         MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
@@ -1072,25 +1331,35 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                     smallData.clear(); //いったん配列を空にする
                     smallTitle.clear();
                     boolean next = scs.moveToFirst();//カーソルの先頭に移動
+                    int smallId;
                     while(next){
-                        HashMap<String,String> item = new HashMap<>();
-                        item.put("id",""+scs.getInt(0));
-                        item.put("title",scs.getString(1));
-                        item.put("big",""+scs.getInt(2));
-                        item.put("bigtitle",scs.getString(3));
-                        item.put("bighold",""+scs.getInt(4));
-                        item.put("middle",""+scs.getInt(5));
-                        item.put("middletitle",scs.getString(6));
-                        item.put("middlehold",""+scs.getInt(7));
-                        item.put("content",scs.getString(8));
-                        item.put("important",""+scs.getInt(9));
-                        item.put("memo",scs.getString(10));
-                        item.put("proceed",""+scs.getInt(11));
-                        item.put("fin",""+scs.getInt(12));
+                        through:
+                        {
+                            smallId = scs.getInt(0);
+                            for (int i = 0; i < smallRoutineData.size(); i++) {
+                                if (smallId == smallRoutineData.get(i)) { //小目標に本日こなしたタスクがあれば飛ばす
+                                    break through;
+                                }
+                            }
+                            HashMap<String, String> item = new HashMap<>();
+                            item.put("id", "" + smallId);
+                            item.put("title", scs.getString(1));
+                            item.put("big", "" + scs.getInt(2));
+                            item.put("bigtitle", scs.getString(3));
+                            item.put("bighold", "" + scs.getInt(4));
+                            item.put("middle", "" + scs.getInt(5));
+                            item.put("middletitle", scs.getString(6));
+                            item.put("middlehold", "" + scs.getInt(7));
+                            item.put("content", scs.getString(8));
+                            item.put("important", "" + scs.getInt(9));
+                            item.put("memo", scs.getString(10));
+                            item.put("proceed", "" + scs.getInt(11));
+                            item.put("fin", "" + scs.getInt(12));
 
-                        smallTitle.add(String.format("(%s)-(%s)-%s",item.get("bigtitle"),item.get("middletitle"),item.get("title")));
+                            smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
 
-                        smallData.add(item); //中目標データ配列に追加
+                            smallData.add(item); //中目標データ配列に追加
+                        }
                         next = scs.moveToNext();
                     }
 
@@ -1121,11 +1390,6 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 //トランザクション開始
                 db.beginTransaction();
                 try{
-
-                    //Calendarクラスのオブジェクトを生成する
-                    Calendar cl = Calendar.getInstance();
-                    //本日の日付データを取得
-                    String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
 
                     //スケジュールを取得
                     String[] schecols = {"id","title","date","content","important","memo","proceed","fin"};//SQLデータから取得する列
@@ -1183,17 +1447,27 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                     todoData.clear(); //いったん配列を空にする
                     todoTitle.clear();
                     boolean next = todocs.moveToFirst();//カーソルの先頭に移動
+                    int tdId;
                     while(next){
-                        HashMap<String,String> item = new HashMap<>();
-                        item.put("id",""+todocs.getInt(0));
-                        item.put("title",todocs.getString(1));
-                        item.put("content",todocs.getString(2));
-                        item.put("important",""+todocs.getInt(3));
-                        item.put("memo",todocs.getString(4));
-                        item.put("proceed",""+todocs.getInt(5));
-                        item.put("fin",""+todocs.getInt(6));
-                        todoData.add(item); //中目標データ配列に追加
-                        todoTitle.add(String.format("%s",item.get("title")));
+                        through:
+                        {
+                            tdId = todocs.getInt(0);
+                            for (int i = 0; i < todoRoutineData.size(); i++) {
+                                if (tdId == todoRoutineData.get(i)) { //小目標に本日こなしたタスクがあれば飛ばす
+                                    break through;
+                                }
+                            }
+                            HashMap<String, String> item = new HashMap<>();
+                            item.put("id", "" + tdId);
+                            item.put("title", todocs.getString(1));
+                            item.put("content", todocs.getString(2));
+                            item.put("important", "" + todocs.getInt(3));
+                            item.put("memo", todocs.getString(4));
+                            item.put("proceed", "" + todocs.getInt(5));
+                            item.put("fin", "" + todocs.getInt(6));
+                            todoData.add(item); //中目標データ配列に追加
+                            todoTitle.add(String.format("%s", item.get("title")));
+                        }
                         next = todocs.moveToNext();
                     }
 
@@ -1226,6 +1500,21 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
             //トランザクション開始
             db.beginTransaction();
             try{
+                //今日終了済みのデイリータスクIDを取得
+
+                Cursor rcs = db.query("DailyData",new String[]{"dailytaskid","level"},"date=?",new String[]{today},null,null,null,null);
+                smallRoutineData.clear();
+                todoRoutineData.clear();
+                boolean next = rcs.moveToFirst();
+                while(next){
+                    String levelCheck = rcs.getString(1);
+                    if(levelCheck.equals("s"))
+                        smallRoutineData.add(rcs.getInt(0));
+                    else if(levelCheck.equals("t"))
+                        todoRoutineData.add(rcs.getInt(0));
+                    next = rcs.moveToNext();
+                }
+
                 //大目標を取得
 
                 String[] bcols = {"id","title","content","important","memo","proceed","fin"};//SQLデータから取得する列
@@ -1234,7 +1523,7 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
 
                 bigData.clear(); //いったん配列を空にする
                 bigTitle.clear();
-                boolean next = bcs.moveToFirst();//カーソルの先頭に移動
+                next = bcs.moveToFirst();//カーソルの先頭に移動
                 while(next){ //Cursorデータが空になるまでbigTitle,bigDataに加えていく
                     bigTitle.add(bcs.getString(1));//大目標のタイトル
                     HashMap<String,String> item = new HashMap<>();
@@ -1282,34 +1571,38 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 smallData.clear(); //いったん配列を空にする
                 smallTitle.clear();
                 next = scs.moveToFirst();//カーソルの先頭に移動
+                int smallId;
                 while(next){
-                    HashMap<String,String> item = new HashMap<>();
-                    item.put("id",""+scs.getInt(0));
-                    item.put("title",scs.getString(1));
-                    item.put("big",""+scs.getInt(2));
-                    item.put("bigtitle",scs.getString(3));
-                    item.put("bighold",""+scs.getInt(4));
-                    item.put("middle",""+scs.getInt(5));
-                    item.put("middletitle",scs.getString(6));
-                    item.put("middlehold",""+scs.getInt(7));
-                    item.put("content",scs.getString(8));
-                    item.put("important",""+scs.getInt(9));
-                    item.put("memo",scs.getString(10));
-                    item.put("proceed",""+scs.getInt(11));
-                    item.put("fin",""+scs.getInt(12));
+                    through:
+                    {
+                        smallId = scs.getInt(0);
+                        for (int i = 0; i < smallRoutineData.size(); i++) {
+                            if (smallId == smallRoutineData.get(i)) { //小目標に本日こなしたタスクがあれば飛ばす
+                                break through;
+                            }
+                        }
+                        HashMap<String, String> item = new HashMap<>();
+                        item.put("id", "" + smallId);
+                        item.put("title", scs.getString(1));
+                        item.put("big", "" + scs.getInt(2));
+                        item.put("bigtitle", scs.getString(3));
+                        item.put("bighold", "" + scs.getInt(4));
+                        item.put("middle", "" + scs.getInt(5));
+                        item.put("middletitle", scs.getString(6));
+                        item.put("middlehold", "" + scs.getInt(7));
+                        item.put("content", scs.getString(8));
+                        item.put("important", "" + scs.getInt(9));
+                        item.put("memo", scs.getString(10));
+                        item.put("proceed", "" + scs.getInt(11));
+                        item.put("fin", "" + scs.getInt(12));
 
-                    smallTitle.add(String.format("(%s)-(%s)-%s",item.get("bigtitle"),item.get("middletitle"),item.get("title")));
+                        smallTitle.add(String.format("(%s)-(%s)-%s", item.get("bigtitle"), item.get("middletitle"), item.get("title")));
 
-                    smallData.add(item); //中目標データ配列に追加
+                        smallData.add(item); //中目標データ配列に追加
+                    }
                     next = scs.moveToNext();
                 }
 
-
-
-                //Calendarクラスのオブジェクトを生成する
-                Calendar cl = Calendar.getInstance();
-                //本日の日付データを取得
-                String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
 
                 //スケジュールを取得
                 String[] schecols = {"id","title","date","content","important","memo","proceed","fin"};//SQLデータから取得する列
@@ -1320,17 +1613,18 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 scheTitle.clear();
                 next = schecs.moveToFirst();//カーソルの先頭に移動
                 while(next){
-                    HashMap<String,String> item = new HashMap<>();
-                    item.put("id",""+schecs.getInt(0));
-                    item.put("title",schecs.getString(1));
-                    item.put("date",""+schecs.getString(2));
-                    item.put("content",schecs.getString(3));
-                    item.put("important",""+schecs.getInt(4));
-                    item.put("memo",schecs.getString(5));
-                    item.put("proceed",""+schecs.getInt(6));
-                    item.put("fin",""+schecs.getInt(7));
-                    scheData.add(item); //中目標データ配列に追加
-                    scheTitle.add(String.format("%s[%s]",item.get("title"),item.get("date")));
+                        HashMap<String, String> item = new HashMap<>();
+                        item.put("id", "" + schecs.getInt(0));
+                        item.put("title", schecs.getString(1));
+                        item.put("date", "" + schecs.getString(2));
+                        item.put("content", schecs.getString(3));
+                        item.put("important", "" + schecs.getInt(4));
+                        item.put("memo", schecs.getString(5));
+                        item.put("proceed", "" + schecs.getInt(6));
+                        item.put("fin", "" + schecs.getInt(7));
+                        scheData.add(item); //中目標データ配列に追加
+                        scheTitle.add(String.format("%s[%s]", item.get("title"), item.get("date")));
+
                     next = schecs.moveToNext();
                 }
 
@@ -1342,17 +1636,27 @@ public class TopFragment extends Fragment implements ProgressDialogFragment.Prog
                 todoData.clear(); //いったん配列を空にする
                 todoTitle.clear();
                 next = todocs.moveToFirst();//カーソルの先頭に移動
+                int tdId;
                 while(next){
-                    HashMap<String,String> item = new HashMap<>();
-                    item.put("id",""+todocs.getInt(0));
-                    item.put("title",todocs.getString(1));
-                    item.put("content",todocs.getString(2));
-                    item.put("important",""+todocs.getInt(3));
-                    item.put("memo",todocs.getString(4));
-                    item.put("proceed",""+todocs.getInt(5));
-                    item.put("fin",""+todocs.getInt(6));
-                    todoData.add(item); //中目標データ配列に追加
-                    todoTitle.add(String.format("%s",item.get("title")));
+                    through:
+                    {
+                        tdId = todocs.getInt(0);
+                        for (int i = 0; i < todoRoutineData.size(); i++) {
+                            if (tdId == todoRoutineData.get(i)) {//TODOリストに本日こなしたタスクがあれば飛ばす
+                                break through;
+                            }
+                        }
+                        HashMap<String, String> item = new HashMap<>();
+                        item.put("id", "" + tdId);
+                        item.put("title", todocs.getString(1));
+                        item.put("content", todocs.getString(2));
+                        item.put("important", "" + todocs.getInt(3));
+                        item.put("memo", todocs.getString(4));
+                        item.put("proceed", "" + todocs.getInt(5));
+                        item.put("fin", "" + todocs.getInt(6));
+                        todoData.add(item); //中目標データ配列に追加
+                        todoTitle.add(String.format("%s", item.get("title")));
+                    }
                     next = todocs.moveToNext();
                 }
 

@@ -102,8 +102,6 @@ public class ProgressDialogFragment extends DialogFragment {
 
                     if(seekProg.getProgress()==100){ //達成率100のとき完了状態にする
                         fin = 1;
-                    }else{
-                        fin = 0;
                     }
 
                     Bundle result = new Bundle();
@@ -124,7 +122,7 @@ public class ProgressDialogFragment extends DialogFragment {
         return dialog;
     }
 
-    private class EditProgListener implements TextWatcher {
+    private class EditProgListener implements TextWatcher { //進捗Edit編集時の処理
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }

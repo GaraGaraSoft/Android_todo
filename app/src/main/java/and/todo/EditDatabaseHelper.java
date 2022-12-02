@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 
 public class EditDatabaseHelper extends SQLiteOpenHelper {
     static final private String DBNAME = "todo"; //データベースファイル名
-    static final private int VERSION = 5; //バージョン番号
+    static final private int VERSION = 7; //バージョン番号
 
     public EditDatabaseHelper(@Nullable Context context) {
         super(context, DBNAME, null, VERSION);
@@ -24,7 +24,8 @@ public class EditDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         if(db!=null){
-            db.execSQL("create table ToDoData (\n" +
+            //登録した目標、スケジュールデータのテーブル
+            db.execSQL("create table if not exists ToDoData (\n" +
                     "id integer primary key autoincrement,\n" +
                     "title text,\n" +
                     "content text,\n" +
@@ -41,8 +42,8 @@ public class EditDatabaseHelper extends SQLiteOpenHelper {
                     "memo text," +
                     "proceed integer," +
                     "fin integer)");
-
-            db.execSQL("create table LogData (\n" +
+            //データ編集の記録テーブル
+            db.execSQL("create table if not exists LogData (\n" +
                     "logid integer primary key autoincrement,\n" +
                     "ope text,\n" + //操作した内容
                     "id integer,\n" + //操作するデータのID
@@ -76,15 +77,23 @@ public class EditDatabaseHelper extends SQLiteOpenHelper {
                     "aftermemo text," +
                     "afterproceed integer," +
                     "afterfin integer)");
+            //日々のこなしたタスクを記録するテーブル
+            db.execSQL("create table if not exists DailyData (\n" +
+                    "id integer primary key autoincrement,\n" + //主キーID
+                    "dailytaskid integer,\n"+ //こなしたタスクID
+                    "dailytasktitle text,\n"+ //こなしたタスクタイトル
+                    "dailycontent text,\n"+ //こなした量
+                    "level text,\n"+ //データの目標レベル
+                    "date text)"); //日付
+
         }
     }
 
     //データベースのバージョンアップ時テーブルを再生成
     @Override
-    public void onUpgrade(SQLiteDatabase db, int i, int i1) {
+    public void onUpgrade(SQLiteDatabase db, int oldVer, int newVer) {
         if(db != null){
-            db.execSQL("drop table if exists ToDoData");
-            db.execSQL("drop table if exists LogData");
+            db.execSQL("drop table if exists DailyData");
             onCreate(db);
         }
     }

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,6 +62,10 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
     int did=0;//削除するデータのID
     private int progressLevel = 0;//進捗編集した項目判定変数
     private Bundle sendData;
+    private boolean bigFinReset=false,middlFinReset=false;//大中目標完了後一番上の項目設定し直されたときの進捗状況ダイアログ防止変数
+
+    //本日の日付データを取得
+    String today;
 
     public static FinishFragment newInstance(Bundle Data){//インスタンス作成時にまず呼び出す
         // インスタンス生成
@@ -83,7 +88,34 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        //Calendarクラスのオブジェクトを生成する
+        Calendar cl = Calendar.getInstance();
+        //本日の日付データを取得
+        today = String.format(Locale.JAPAN,"%02d-%02d-%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
+
         Activity activity = requireActivity();
+
+        View decor = requireActivity().getWindow().getDecorView();//バーを含めたぜびゅー全体
+
+        ConstraintLayout top = view.findViewById(R.id.finConstraint);
+        top.setOnClickListener(v-> {
+
+            if(decor.getSystemUiVisibility() == 0) {//アクションバーに表示されているとき
+
+                decor.setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                |View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                );
+            }else{
+
+                decor.setSystemUiVisibility(0);
+            }
+
+        });
 
         //Bundleデータ取得
         Bundle Data = getArguments();
@@ -107,9 +139,9 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 bid = Integer.parseInt( bigData.get(position).get("id"));
                 bigDel = position;
                 if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),bigData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity(),bigTitle.get(position)+"の内容:\n"+bigData.get(position).get("content"),Toast.LENGTH_LONG).show();
                 }
-                if(progress) {
+                if(progress && bigFinReset == false) {
                     progressLevel = 1;
 
                     // フラグメントマネージャーを取得
@@ -126,6 +158,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
                     dialog.show(fragmentManager,"dialog_progress");
                 }
+                bigFinReset = false;
 
             }
 
@@ -140,7 +173,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
 
         //中目標にデータ設定
-        middleTarget = (CustomSpinner) view.findViewById(R.id.modeChange);
+        middleTarget = (CustomSpinner) view.findViewById(R.id.middleTarget);
         ArrayAdapter<String> mAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
         middleTarget.setAdapter(mAdapter);
         middleTarget.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener(){
@@ -150,9 +183,9 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 mid = Integer.parseInt( middleData.get(position).get("id"));
                 middleDel = position;
                 if(content){ //内容表示モード
-                    Toast.makeText(requireActivity(),middleData.get(position).get("content"),Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity(),middleTitle.get(position)+"の内容:\n"+middleData.get(position).get("content"),Toast.LENGTH_LONG).show();
                 }
-                if(progress) {
+                if(progress && middlFinReset == false) {
                     progressLevel = 2;
                     // フラグメントマネージャーを取得
                     FragmentManager fragmentManager = getParentFragmentManager();
@@ -168,6 +201,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
                     dialog.show(fragmentManager,"dialog_progress");
                 }
+                middlFinReset = false;
 
             }
 
@@ -439,7 +473,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         sid = Integer.parseInt( smallData.get(position).get("id"));
         smallDel = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
+            Toast.makeText(requireActivity(),smallTitle.get(position)+"の内容:\n"+smallData.get(position).get("content"),Toast.LENGTH_LONG).show();
         }
         //ToDo 進捗状況入力ダイアログ
         if(progress) {
@@ -466,7 +500,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         scheid = Integer.parseInt( scheData.get(position).get("id"));
         scheDel = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),scheData.get(position).get("content"),Toast.LENGTH_LONG).show();
+            Toast.makeText(requireActivity(),scheTitle.get(position)+"の内容:\n"+scheData.get(position).get("content"),Toast.LENGTH_LONG).show();
         }
         if(progress) {
             progressLevel =4;
@@ -493,7 +527,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         todoid = Integer.parseInt( todoData.get(position).get("id") );
         todoDel = position;
         if(content){ //内容表示モード
-            Toast.makeText(requireActivity(),todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
+            Toast.makeText(requireActivity(),todoTitle.get(position)+"の内容:\n"+todoData.get(position).get("content"),Toast.LENGTH_LONG).show();
         }
         if(progress) {
             progressLevel =5;
@@ -625,7 +659,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     if(bigData.size()>0){ //大目標データ存在時、一番上に戻す
                         bigDel = 0;
                         bid = Integer.parseInt(bigData.get(0).get("id"));
-                        bigTarget.setSelection(0);
+                        bigFinReset = true;
                     }else{ //大目標がないときは編集削除ボタンを無効化
                         bedit.setEnabled(false);
                         bdl.setEnabled(false);
@@ -661,7 +695,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
                             middleDel = 0;
                             mid = Integer.parseInt(middleData.get(0).get("id"));
-                            middleTarget.setSelection(0);
+                            middlFinReset = true;
                         }else{ //中目標がないときは編集削除ボタンを無効化
                             medit.setEnabled(false);
                             mdl.setEnabled(false);
@@ -752,7 +786,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
                         middleDel = 0;
                         mid = Integer.parseInt(middleData.get(0).get("id"));
-                        middleTarget.setSelection(0);
+                        middlFinReset = true;
                     }else{ //中目標がないときは編集削除ボタンを無効化
                         medit.setEnabled(false);
                         mdl.setEnabled(false);
@@ -869,11 +903,6 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 //トランザクション開始
                 db.beginTransaction();
                 try{
-
-                    //Calendarクラスのオブジェクトを生成する
-                    Calendar cl = Calendar.getInstance();
-                    //本日の日付データを取得
-                    String today = String.format(Locale.JAPAN,"%02d/%02d/%02d",cl.get(Calendar.YEAR),cl.get(Calendar.MONTH)+1,cl.get(Calendar.DATE));
 
                     //スケジュールを取得
                     String[] schecols = {"id","title","date","content","important","memo","proceed","fin"};//SQLデータから取得する列
@@ -1030,7 +1059,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 fragmentTransaction.commit();
 
             }else if(view == bdl || view == mdl || view == sdl || view == schedl || view == tododl){
-                //ToDo 削除確認ダイアログへ飛ぶ
+                //削除確認ダイアログへ飛ぶ
 
                 // フラグメントマネージャーを取得
                 FragmentManager fragmentManager = getParentFragmentManager();
@@ -1302,8 +1331,8 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
                 //スケジュールを取得
                 String[] schecols = {"id","title","date","content","important","memo","proceed","fin"};//SQLデータから取得する列
-                String[] schelevel = { "schedule","1" };//スケジュールのみを抽出
-                Cursor schecs = db.query("ToDoData",schecols,"level=? and fin=?",schelevel,null,null,null,null);
+                String[] schelevel = { "schedule","1",today };//スケジュールのみを抽出
+                Cursor schecs = db.query("ToDoData",schecols,"level=? and fin=? and date=?",schelevel,null,null,null,null);
 
                 scheData.clear(); //いったん配列を空にする
                 scheTitle.clear();

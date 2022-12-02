@@ -6,7 +6,7 @@
     android:layout_height="wrap_content">
 
     <ScrollView
-        android:id="@+id/scrollView"
+        android:id="@+id/topScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:isScrollContainer="false"
@@ -18,7 +18,7 @@
         app:layout_constraintVertical_bias="0.0">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraint"
+            android:id="@+id/topConstraint"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -39,7 +39,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:layout_constraintStart_toStartOf="parent"
+                android:prompt="@string/modeselecter"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <and.todo.CustomSpinner
@@ -80,12 +81,12 @@
                 android:id="@+id/bigTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:text="@string/big"
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/modeChange" />
+                app:layout_constraintTop_toBottomOf="@+id/dailyTask" />
 
             <TextView
                 android:id="@+id/scheduleTitle"
@@ -284,6 +285,19 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <Button
+                android:id="@+id/dailyTask"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="#EF6CA0"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="日課タスク達成度"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/modeChange" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -1,24 +1,51 @@
 package and.todo;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.FragmentContainerView;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button top = findViewById(R.id.topButton); //Topボタン要素を取得
-        top.setOnClickListener(v->{ //TOPを再生成
+
+        View decor = getWindow().getDecorView();//アクションバー含む全ビュー取得
+
+        ConstraintLayout main = findViewById(R.id.MainLayout);
+        main.setOnClickListener(v-> {
+
+            if(decor.getSystemUiVisibility() == 0) {//アクションバーを隠す
+
+                decor.setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                |View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                );
+            }else{//アクションバーを再表示
+
+                decor.setSystemUiVisibility(0);
+            }
+
+        });
+
+
+        TextView title = findViewById(R.id.textView);
+        title.setOnClickListener(v->{ //TOPを再生成
             // FragmentManagerのインスタンス生成
             FragmentManager fragmentManager = getSupportFragmentManager();
             // FragmentTransactionのインスタンスを取得

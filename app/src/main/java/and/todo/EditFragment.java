@@ -104,6 +104,29 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
 
         }
 
+        View decor = requireActivity().getWindow().getDecorView();//バーを含めたぜびゅー全体
+
+        ConstraintLayout top = view.findViewById(R.id.editConstraint);
+        top.setOnClickListener(v-> {
+
+            if(decor.getSystemUiVisibility() == 0) {//アクションバーに表示されているとき
+
+                decor.setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                |View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                );
+            }else{
+
+                decor.setSystemUiVisibility(0);
+            }
+
+        });
+
+
         //データベースヘルパー準備
         helper = new EditDatabaseHelper(requireActivity());
 
@@ -475,7 +498,7 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
 
     @Override
     public void onDateDialog(DatePicker datePicker, int year, int monthOfYear, int dayOfMonth) {
-        date =String.format(Locale.JAPAN,"%02d/%02d/%02d",year,monthOfYear+1,dayOfMonth);
+        date =String.format(Locale.JAPAN,"%02d-%02d-%02d",year,monthOfYear+1,dayOfMonth);
         EditText txtDate = requireActivity().findViewById(R.id.editDate);
         txtDate.setText(date);
     }
@@ -640,7 +663,7 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
                     String inputDate= editable.toString();
 
                     // 入力された文字をチェック
-                    if(inputDate.matches("[0-9]{4}/[0-9]{2}/[0-9]{2}")){
+                    if(inputDate.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")){
                         String str = "OK";
                         txtCheck.setText(str);
                         date = inputDate;
@@ -651,7 +674,7 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
                         }
                     }
                     else {
-                        txtCheck.setText("〇〇〇〇/××/△△の形で記入");
+                        txtCheck.setText("〇〇〇〇-××-△△の形で記入");
                         dateok = false;
                         editBtn.setEnabled(false);
                     }

@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 
 import java.sql.Array;
@@ -35,7 +36,7 @@ public class LogFragment extends Fragment {
     private EditDatabaseHelper helper;
     private ListView logList;
     private int selectId = 0; //選択したログのID
-    private Button first,previous,forward,last;//ページを移動するボタン要素
+    private Button first,previous,forward,last,logBack;//ページを移動するボタン要素
     private TextView txtlogNum;//ページ、ログ番号を表示
     private int pageLogNum;//表示ページ内のログ件数
 
@@ -61,6 +62,28 @@ public class LogFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        View decor = requireActivity().getWindow().getDecorView();//バーを含めたぜびゅー全体
+
+        ConstraintLayout top = view.findViewById(R.id.topConstraint);
+        top.setOnClickListener(v-> {
+
+            if(decor.getSystemUiVisibility() == 0) {//アクションバーに表示されているとき
+
+                decor.setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                |View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                );
+            }else{
+
+                decor.setSystemUiVisibility(0);
+            }
+
+        });
+
         helper = new EditDatabaseHelper(requireActivity());
 
         getLogs(); //ログデータを取得する
@@ -71,7 +94,7 @@ public class LogFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 selectId = position; //リストクリック時に選択したデータIDを取得
-                Log.e("SELECT",""+logData.get(position).get("logid"));
+                logBack.setEnabled(true); //項目選択で復元ボタン有効化
             }
         });
 
@@ -92,7 +115,8 @@ public class LogFragment extends Fragment {
         last = view.findViewById(R.id.last);
         last.setOnClickListener(new PageChange());
 
-        Button logBack = requireActivity().findViewById(R.id.logBack);
+        logBack = requireActivity().findViewById(R.id.logBack);
+        logBack.setEnabled(false); //項目選択まで復元ボタン無効化
         logBack.setOnClickListener(v->{
             //ログからデータを復旧する
 
@@ -535,6 +559,7 @@ public class LogFragment extends Fragment {
             logList.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_list_item_1, logTitle));
             pageLogNum = (((int) logNum - page * 30) > 30) ? 30 : ((int) logNum - page * 30); //1ページに表示するログ件数取得
             txtlogNum.setText(String.format("ログ(No.%d～No.%d)まで表示(%d/%dページ)", page * 30 + 1, page * 30 + pageLogNum, page + 1, (int) logNum / 30 + 1));
+            logBack.setEnabled(false); //復元ボタン無効化
 
         });
     }
@@ -549,6 +574,7 @@ public class LogFragment extends Fragment {
                     logList.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_list_item_1, logTitle));
                     pageLogNum = (((int) logNum - page * 30) > 30) ? 30 : ((int) logNum - page * 30); //1ページに表示するログ件数取得
                     txtlogNum.setText(String.format("ログ(No.%d～No.%d)まで表示(%d/%dページ)", page * 30 + 1, page * 30 + pageLogNum, page + 1, (int) logNum / 30 + 1));
+                    logBack.setEnabled(false); //ページ切替え時復元ボタン無効化
                 }
             }else if(view == previous){
                 if(page>0)
@@ -558,6 +584,7 @@ public class LogFragment extends Fragment {
                     logList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,logTitle));
                     pageLogNum = (((int)logNum - page*30)>30) ? 30: ((int)logNum - page*30) ; //1ページに表示するログ件数取得
                     txtlogNum.setText(String.format("ログ(No.%d～No.%d)まで表示(%d/%dページ)",page*30+1,page*30+pageLogNum,page+1,(int)logNum/30+1));
+                    logBack.setEnabled(false); //ページ切替え時復元ボタン無効化
                 }
             }else if(view == forward){
                 if( page < (int)logNum/30 )
@@ -567,6 +594,7 @@ public class LogFragment extends Fragment {
                     logList.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_list_item_1,logTitle));
                     pageLogNum = (((int)logNum - page*30)>30) ? 30: ((int)logNum - page*30) ; //1ページに表示するログ件数取得
                     txtlogNum.setText(String.format("ログ(No.%d～No.%d)まで表示(%d/%dページ)",page*30+1,page*30+pageLogNum,page+1,(int)logNum/30+1));
+                    logBack.setEnabled(false); //ページ切替え時復元ボタン無効化
                 }
             }else if(view == last){
                 if( page != (int)logNum/30) {
@@ -575,9 +603,9 @@ public class LogFragment extends Fragment {
                     logList.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_list_item_1, logTitle));
                     pageLogNum = (((int) logNum - page * 30) > 30) ? 30 : ((int) logNum - page * 30); //1ページに表示するログ件数取得
                     txtlogNum.setText(String.format("ログ(No.%d～No.%d)まで表示(%d/%dページ)", page * 30 + 1, page * 30 + pageLogNum, page + 1, (int) logNum / 30 + 1));
+                    logBack.setEnabled(false); //ページ切替え時復元ボタン無効化
                 }
             }
-            Log.e("KOUMOKU",page*30+","+(page*30+30));
         }
     }
 

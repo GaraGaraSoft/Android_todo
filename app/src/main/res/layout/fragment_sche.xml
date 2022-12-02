@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <ScrollView
-        android:id="@+id/scrollView"
+        android:id="@+id/topScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:isScrollContainer="false"
@@ -18,7 +18,7 @@
         app:layout_constraintVertical_bias="0.0">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraint"
+            android:id="@+id/scheConstraint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -190,7 +190,8 @@
                 android:id="@+id/modeChange"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
