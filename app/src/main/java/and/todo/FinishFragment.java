@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -34,15 +35,18 @@ import java.util.HashMap;
 import java.util.Locale;
 
 @SuppressWarnings("all") //ToDo　後で削除してできるかぎり警告文修正
-public class FinishFragment extends Fragment  implements ProgressDialogFragment.ProgressDialogListener,DelDialogFragment.DelDialogListener{
+public class FinishFragment extends Fragment  implements ProgressDialogFragment.ProgressDialogListener,DelDialogFragment.DelDialogListener,FinDialogFragment.FinDialogListener{
     EditDatabaseHelper helper;
     ArrayList<String> bigTitle = new ArrayList<>(); //表示する大目標のタイトルを保管する配列
     ArrayList<HashMap<String,String>> bigData = new ArrayList<>(); //表示する大目標データを保管するための配列
-    ArrayList<HashMap<String,String>> nonBigData = new ArrayList<>();//非完了タスクの大目標データを保管する配列
+    //ArrayList<HashMap<String,String>> nonBigData = new ArrayList<>();
+    //非完了タスクの大目標データを保管する配列
     ArrayList<String> middleTitle = new ArrayList<>();//表示する中目標のタイトルを保管する配列
-    ArrayList<HashMap<String,String>> middleData = new ArrayList<>();//表示する中目標データを保管するための配列
-    ArrayList<String> nonMiddleTitle = new ArrayList<>();
-    ArrayList<HashMap<String,String>> nonMiddleData = new ArrayList<>(); //非完了タスクの中目標データを保管する配列
+    ArrayList<HashMap<String,String>> middleData = new ArrayList<>();
+    //表示する中目標データを保管するための配列
+    //ArrayList<String> nonMiddleTitle = new ArrayList<>();
+    //ArrayList<HashMap<String,String>> nonMiddleData = new ArrayList<>();
+    //非完了タスクの中目標データを保管する配列
     ArrayList<String> smallTitle = new ArrayList<>();
     ArrayList<HashMap<String,String>> smallData = new ArrayList<>();//表示する小目標データを保管するための配列
     ArrayList<String> scheTitle = new ArrayList<>();
@@ -52,6 +56,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
     int bid=0,mid=0,sid=0,scheid=0,todoid=0;//項目選択時のID保管用変数
     ImageButton bedit,medit,sedit,scheedit,todoedit;//各編集ボタン変数
     ImageButton bdl,mdl,sdl,schedl,tododl;//各削除ボタン変数
+    Button bfin,mfin,sfin,schefin,todofin;//各完了ボタン変数
     CustomSpinner bigTarget,middleTarget; //大中目標のスピナー変数
     RecyclerView sList,scheList,todoList; //小目標スケジュールのリスト変数
     DeleteData del = null; //データ削除用クラス
@@ -130,8 +135,20 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
         //大目標にデータ設定
         bigTarget = (CustomSpinner) view.findViewById(R.id.bigTarget);
-        ArrayAdapter<String> bAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
-        bigTarget.setAdapter(bAdapter);
+        if(bigData.size()==0){
+            //レイアウトを取得して消去しブランクにする
+            ConstraintLayout layout;
+            layout = (ConstraintLayout) view.findViewById(R.id.bigLayout);
+            layout.removeAllViews();
+            getLayoutInflater().inflate(R.layout.non_items, layout);
+            TextView non = layout.findViewById(R.id.noItems);
+            non.setText("完了済み大目標なし");
+
+        }else{
+            ArrayAdapter<String> bAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
+            bigTarget.setAdapter(bAdapter);
+            bid = Integer.parseInt(bigData.get(0).get("id")); //大目標の初期位置ID
+
         bigTarget.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener(){
 
             @Override
@@ -167,15 +184,25 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
             }
         });
-        if(bigData.size()>0) { //大目標が１つ以上あるときの初期設定
-            bid = Integer.parseInt(bigData.get(0).get("id")); //大目標の初期位置ID
-        }
 
+    }
 
         //中目標にデータ設定
         middleTarget = (CustomSpinner) view.findViewById(R.id.middleTarget);
-        ArrayAdapter<String> mAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
-        middleTarget.setAdapter(mAdapter);
+        if(middleData.size()==0){
+            //レイアウトを取得して消去しブランクにする
+            ConstraintLayout layout;
+            layout = (ConstraintLayout) view.findViewById(R.id.middleLayout);
+            layout.removeAllViews();
+            getLayoutInflater().inflate(R.layout.non_items, layout);
+            TextView non = layout.findViewById(R.id.noItems);
+            non.setText("完了済み中目標なし");
+
+        }else{
+            ArrayAdapter<String> mAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
+            middleTarget.setAdapter(mAdapter);
+            mid = Integer.parseInt(middleData.get(0).get("id")); //中目標の初期位置ID
+
         middleTarget.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener(){
 
             @Override
@@ -210,10 +237,8 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
             }
         });
-        if(middleData.size()>0) { //中目標が１つ以上あるときの初期設定
-            mid = Integer.parseInt(middleData.get(0).get("id")); //中目標の初期位置ID
-        }
 
+    }
         if(smallData.size()==0){ //小目標がない時レイアウトを消す
             //レイアウトを取得して消去しブランクにする
             ConstraintLayout layout;
@@ -249,34 +274,37 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
             //LayoutParamsを取得
             ViewGroup.LayoutParams params = sList.getLayoutParams();
             if (smallData.size() == 1) { //リストの項目数で高さを変える
-                params.height = 100;
-            } else if (smallData.size() == 2) {
                 params.height = 200;
-            } else if(smallData.size() == 3){
+            } else if (smallData.size() == 2) {
                 params.height = 300;
-            } else if(smallData.size() == 4){
+            } else if(smallData.size() == 3){
                 params.height = 400;
-            }else if(smallData.size() == 5){
+            } else if(smallData.size() == 4){
                 params.height = 500;
-            }else if (smallData.size() == 6) {
+            }else if(smallData.size() == 5){
                 params.height = 600;
-            } else if(smallData.size() == 7){
+            }else if (smallData.size() == 6) {
                 params.height = 700;
-            }else if(smallData.size() == 8){
+            } else if(smallData.size() == 7){
                 params.height = 800;
-            }else if (smallData.size() >= 9) {
+            }else if(smallData.size() == 8){
                 params.height = 900;
+            }else if (smallData.size() >= 9) {
+                params.height = 1000;
             }
             sList.setLayoutParams(params);
 
+        }
             sedit = (ImageButton) view.findViewById(R.id.SeditButton);
             sedit.setEnabled(false); //項目選択まで無効化
             sedit.setOnClickListener(new editClicker());
             sdl = (ImageButton) view.findViewById(R.id.SdeleteButton);
             sdl.setEnabled(false); //項目選択まで削除ボタン無効化
             sdl.setOnClickListener(new editClicker());
+            sfin = view.findViewById(R.id.SFinishButton);
+            sfin.setEnabled(false);//項目選択まで完了ボタン無効化
+            sfin.setOnClickListener(new editClicker());
 
-        }
 
 
         //その日の予定数によってスケジュールの大きさ変更
@@ -311,26 +339,27 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
             //LayoutParamsを取得
             ViewGroup.LayoutParams params = scheList.getLayoutParams();
             if (scheData.size() == 1) {
-                params.height = 100;
-            } else if (scheData.size() == 2) {
                 params.height = 200;
-            } else if(scheData.size() == 3){
+            } else if (scheData.size() == 2) {
                 params.height = 300;
-            } else if(scheData.size() == 4){
+            } else if(scheData.size() == 3){
                 params.height = 400;
-            }else if(scheData.size() == 5){
+            } else if(scheData.size() == 4){
                 params.height = 500;
+            }else if(scheData.size() == 5){
+                params.height = 600;
             }else if (scheData.size() == 6) {
-                params.height =600;
+                params.height =700;
             } else if(scheData.size() == 7){
-                params.height = 700;
-            }else if(scheData.size() == 8){
                 params.height = 800;
-            }else if (scheData.size() >= 9) {
+            }else if(scheData.size() == 8){
                 params.height = 900;
+            }else if (scheData.size() >= 9) {
+                params.height = 1000;
             }
             scheList.setLayoutParams(params);
 
+        }
             scheedit = (ImageButton) view.findViewById(R.id.ScheEditButton);
             scheedit.setEnabled(false);
             scheedit.setOnClickListener(new editClicker());
@@ -339,7 +368,10 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
             schedl.setEnabled(false);
             schedl.setOnClickListener(new editClicker());
 
-        }
+            schefin = view.findViewById(R.id.ScheFinishButton);
+            schefin.setEnabled(false);
+            schefin.setOnClickListener(new editClicker());
+
 
         if(todoData.size()==0){ //TODOリストにデータがないときレイアウトを消す
             //レイアウトを取得して消去しブランクにする
@@ -374,34 +406,37 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
             //LayoutParamsを取得
             ViewGroup.LayoutParams params = todoList.getLayoutParams();
             if (todoData.size() == 1) {
-                params.height = 100;
-            } else if (todoData.size() == 2) {
                 params.height = 200;
-            } else if(todoData.size() == 3){
+            } else if (todoData.size() == 2) {
                 params.height = 300;
-            } else if(todoData.size() == 4){
+            } else if(todoData.size() == 3){
                 params.height = 400;
-            }else if(todoData.size() == 5){
+            } else if(todoData.size() == 4){
                 params.height = 500;
+            }else if(todoData.size() == 5){
+                params.height = 600;
             }else if (todoData.size() == 6) {
-                params.height =600;
+                params.height =700;
             } else if(todoData.size() == 7){
-                params.height = 700;
-            }else if(todoData.size() == 8){
                 params.height = 800;
-            }else if (todoData.size() >= 9) {
+            }else if(todoData.size() == 8){
                 params.height = 900;
+            }else if (todoData.size() >= 9) {
+                params.height = 1000;
             }
             todoList.setLayoutParams(params);
 
+        }
             todoedit = (ImageButton) view.findViewById(R.id.todoEdit);
             todoedit.setEnabled(false);
             todoedit.setOnClickListener(new editClicker());
             tododl = (ImageButton) view.findViewById(R.id.todoDelete);
             tododl.setEnabled(false);
             tododl.setOnClickListener(new editClicker());
+            todofin = view.findViewById(R.id.todoFinishButton);
+            todofin.setEnabled(false);
+            todofin.setOnClickListener(new editClicker());
 
-        }
 
 
 
@@ -467,6 +502,23 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         bdl.setOnClickListener(new editClicker());
         mdl.setOnClickListener(new editClicker());
 
+        //各完了ボタン要素を取得
+        bfin = view.findViewById(R.id.BFinishButton);
+        if(bigData.size()>0){
+            bfin.setEnabled(true);
+        }else{
+            bfin.setEnabled(false);
+        }
+        mfin = view.findViewById(R.id.MFinishButton);
+        if(middleData.size()>0){
+            mfin.setEnabled(true);
+        }else{
+            mfin.setEnabled(false);
+        }
+        //各完了ボタンのイベントリスナー
+        bfin.setOnClickListener(new editClicker());
+        mfin.setOnClickListener(new editClicker());
+
     }
 
     public void onSmallItemClick(View view,int position,String itemData){//小目標項目選択時のID取得,処理
@@ -494,6 +546,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         }
         sedit.setEnabled(true); //編集ボタン有効化
         sdl.setEnabled(true); //削除ボタン有効化
+        sfin.setEnabled(true);
     }
 
     public void onScheItemClick(View view,int position,String itemData){ //スケジュール項目選択時のID取得,処理
@@ -520,6 +573,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         }
         scheedit.setEnabled(true);
         schedl.setEnabled(true);
+        schefin.setEnabled(true);
     }
 
 
@@ -547,6 +601,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         }
         todoedit.setEnabled(true);
         tododl.setEnabled(true);
+        todofin.setEnabled(true);
     }
 
 
@@ -655,7 +710,19 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         bigData.add(item);
                         next = bcs.moveToNext();
                     }
-                    bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle));
+                    if(bigData.size()==0){
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.bigLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済み大目標なし");
+
+                    }else {
+                        bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, bigTitle));
+                    }
                     if(bigData.size()>0){ //大目標データ存在時、一番上に戻す
                         bigDel = 0;
                         bid = Integer.parseInt(bigData.get(0).get("id"));
@@ -663,6 +730,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     }else{ //大目標がないときは編集削除ボタンを無効化
                         bedit.setEnabled(false);
                         bdl.setEnabled(false);
+                        bfin.setEnabled(false);
                     }
 
                     if(fin==1) { //大目標タスク完了時は中小目標タスクも再読み込み
@@ -691,7 +759,19 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                             middleData.add(item); //中目標データ配列に追加
                             next = mcs.moveToNext();
                         }
-                        middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+                        if(middleData.size()==0){
+                            //レイアウトを取得して消去しブランクにする
+                            ConstraintLayout layout;
+                            layout =
+                                    (ConstraintLayout) requireActivity().findViewById(R.id.middleLayout);
+                            layout.removeAllViews();
+                            getLayoutInflater().inflate(R.layout.non_items, layout);
+                            TextView non = layout.findViewById(R.id.noItems);
+                            non.setText("完了済み中目標なし");
+
+                        }else {
+                            middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, middleTitle));
+                        }
                         if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
                             middleDel = 0;
                             mid = Integer.parseInt(middleData.get(0).get("id"));
@@ -699,6 +779,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         }else{ //中目標がないときは編集削除ボタンを無効化
                             medit.setEnabled(false);
                             mdl.setEnabled(false);
+                            mfin.setEnabled(false);
                         }
                         //小目標を取得
                         String[] scols = {"id", "title", "big", "bigtitle", "bighold", "middle", "middletitle", "middlehold", "content", "important", "memo", "proceed", "fin"};//SQLデータから取得する列
@@ -730,15 +811,27 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                             next = scs.moveToNext();
                         }
 
-                        MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
-                            @Override
-                            void onRecycleItemClick(View view, int position, String itemData) {
-                                onSmallItemClick(view,position,itemData);
-                            }
-                        };
-                        sList.setAdapter(adapter);
+                        if(smallData.size()==0){ //小目標がない時レイアウトを消す
+                            //レイアウトを取得して消去しブランクにする
+                            ConstraintLayout layout;
+                            layout =
+                                    (ConstraintLayout) requireActivity().findViewById(R.id.smallLayout);
+                            layout.removeAllViews();
+                            getLayoutInflater().inflate(R.layout.non_items, layout);
+                            TextView non = layout.findViewById(R.id.noItems);
+                            non.setText("完了済み小目標なし");
+                        }else {
+                            MyAdapter adapter = new MyAdapter(smallTitle) {//リストクリック時の処理
+                                @Override
+                                void onRecycleItemClick(View view, int position, String itemData) {
+                                    onSmallItemClick(view, position, itemData);
+                                }
+                            };
+                            sList.setAdapter(adapter);
+                        }
                         sedit.setEnabled(false); //編集、削除ボタン無効化
                         sdl.setEnabled(false);
+                        sfin.setEnabled(false);
                     }
 
                     //トランザクション成功
@@ -782,7 +875,19 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         middleData.add(item); //中目標データ配列に追加
                         next = mcs.moveToNext();
                     }
-                    middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+                    if(middleData.size()==0){
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.middleLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済み中目標なし");
+
+                    }else {
+                        middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, middleTitle));
+                    }
                     if(middleData.size()>0){ //中目標データ存在時、一番上に戻す
                         middleDel = 0;
                         mid = Integer.parseInt(middleData.get(0).get("id"));
@@ -790,6 +895,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     }else{ //中目標がないときは編集削除ボタンを無効化
                         medit.setEnabled(false);
                         mdl.setEnabled(false);
+                        mfin.setEnabled(false);
                     }
                     if(fin==1) { //タスク終了時は小目標も再読み込み
                         //小目標を取得
@@ -821,15 +927,27 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                             smallData.add(item); //中目標データ配列に追加
                             next = scs.moveToNext();
                         }
-                        MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
-                            @Override
-                            void onRecycleItemClick(View view, int position, String itemData) {
-                                onSmallItemClick(view,position,itemData);
-                            }
-                        };
-                        sList.setAdapter(adapter);
+                        if(smallData.size()==0){ //小目標がない時レイアウトを消す
+                            //レイアウトを取得して消去しブランクにする
+                            ConstraintLayout layout;
+                            layout =
+                                    (ConstraintLayout) requireActivity().findViewById(R.id.smallLayout);
+                            layout.removeAllViews();
+                            getLayoutInflater().inflate(R.layout.non_items, layout);
+                            TextView non = layout.findViewById(R.id.noItems);
+                            non.setText("完了済み小目標なし");
+                        }else {
+                            MyAdapter adapter = new MyAdapter(smallTitle) {//リストクリック時の処理
+                                @Override
+                                void onRecycleItemClick(View view, int position, String itemData) {
+                                    onSmallItemClick(view, position, itemData);
+                                }
+                            };
+                            sList.setAdapter(adapter);
+                        }
                         sedit.setEnabled(false); //編集、削除ボタン無効化
                         sdl.setEnabled(false);
+                        sfin.setEnabled(false);
                     }
                     //トランザクション成功
                     db.setTransactionSuccessful();
@@ -876,15 +994,27 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         smallData.add(item); //中目標データ配列に追加
                         next = scs.moveToNext();
                     }
-                    MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
-                        @Override
-                        void onRecycleItemClick(View view, int position, String itemData) {
-                            onSmallItemClick(view,position,itemData);
-                        }
-                    };
-                    sList.setAdapter(adapter);
+                    if(smallData.size()==0){ //小目標がない時レイアウトを消す
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.smallLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済み小目標なし");
+                    }else {
+                        MyAdapter adapter = new MyAdapter(smallTitle) {//リストクリック時の処理
+                            @Override
+                            void onRecycleItemClick(View view, int position, String itemData) {
+                                onSmallItemClick(view, position, itemData);
+                            }
+                        };
+                        sList.setAdapter(adapter);
+                    }
                     sedit.setEnabled(false); //編集、削除ボタン無効化
                     sdl.setEnabled(false);
+                    sfin.setEnabled(false);
 
                     //トランザクション成功
                     db.setTransactionSuccessful();
@@ -926,15 +1056,28 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         scheTitle.add(String.format("%s[%s]",item.get("title"),item.get("date")));
                         next = schecs.moveToNext();
                     }
-                    MyAdapter adapter = new MyAdapter(scheTitle){//リストクリック時の処理
-                        @Override
-                        void onRecycleItemClick(View view, int position, String itemData) {
-                            onScheItemClick(view,position,itemData);
-                        }
-                    };
-                    scheList.setAdapter(adapter);
+                    if(scheData.size()==0){ //スケジュールがないとき当日のスケジュール枠を消す
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.scheduleLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済みの当日スケジュールなし");
+                    }else {
+
+                        MyAdapter adapter = new MyAdapter(scheTitle) {//リストクリック時の処理
+                            @Override
+                            void onRecycleItemClick(View view, int position, String itemData) {
+                                onScheItemClick(view, position, itemData);
+                            }
+                        };
+                        scheList.setAdapter(adapter);
+                    }
                     scheedit.setEnabled(false); //編集、削除ボタン無効化
                     schedl.setEnabled(false);
+                    schefin.setEnabled(false);
 
                     //トランザクション成功
                     db.setTransactionSuccessful();
@@ -974,15 +1117,28 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         next = todocs.moveToNext();
                     }
 
-                    MyAdapter adapter = new MyAdapter(todoTitle){//リストクリック時の処理
-                        @Override
-                        void onRecycleItemClick(View view, int position, String itemData) {
-                            onToDoItemClick(view,position,itemData);
-                        }
-                    };
-                    todoList.setAdapter(adapter);
+                    if(todoData.size()==0){ //TODOリストにデータがないときレイアウトを消す
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.todoLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済みのTODOタスクなし");
+                    }else {
+
+                        MyAdapter adapter = new MyAdapter(todoTitle) {//リストクリック時の処理
+                            @Override
+                            void onRecycleItemClick(View view, int position, String itemData) {
+                                onToDoItemClick(view, position, itemData);
+                            }
+                        };
+                        todoList.setAdapter(adapter);
+                    }
                     todoedit.setEnabled(false);
                     tododl.setEnabled(false);
+                    todofin.setEnabled(false);
 
                     //トランザクション成功
                     db.setTransactionSuccessful();
@@ -1042,6 +1198,31 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 editData.putString("level","todo");
                 dlevel = "todo";
                 did = todoid;
+            }else if(view == bfin){//大目標の完了ボタン
+                editData.putString("title",bigTitle.get(bigDel));
+                editData.putString("level","big");
+                dlevel = "big";
+                did = bid;
+            }else if(view == mfin){//中目標の完了ボタン
+                editData.putString("title",middleTitle.get(middleDel));
+                editData.putString("level","middle");
+                dlevel = "middle";
+                did = mid;
+            }else if(view == sfin){//小目標の完了ボタン
+                editData.putString("title",smallTitle.get(smallDel));
+                editData.putString("level","small");
+                dlevel = "small";
+                did = sid;
+            }else if(view == schefin){//スケジュールの完了ボタン
+                editData.putString("title",scheTitle.get(scheDel));
+                editData.putString("level","schedule");
+                dlevel = "schedule";
+                did = scheid;
+            }else if(view == todofin){//やることリスト完了ボタン
+                editData.putString("title",todoTitle.get(todoDel));
+                editData.putString("level","todo");
+                dlevel = "todo";
+                did = todoid;
             }
 
             if(view == bedit || view == medit || view == sedit || view == todoedit || view == scheedit){
@@ -1069,6 +1250,18 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
 
                 dialog.show(fragmentManager,"dialog_delete");
 
+            }else if(view == bfin || view == mfin || view == sfin || view == schefin || view == todofin){
+                //削除確認ダイアログへ飛ぶ
+
+                // フラグメントマネージャーを取得
+                FragmentManager fragmentManager = getParentFragmentManager();
+
+                FinDialogFragment dialog =
+                        FinDialogFragment.newInstance(editData);
+                dialog.setTargetFragment(FinishFragment.this, 0);
+
+                dialog.show(fragmentManager,"dialog_delete");
+
             }
 
         }
@@ -1084,14 +1277,38 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
         if(dlevel.equals("big")){
             bigData.remove(bigDel);
             bigTitle.remove(bigDel);
-            bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle));
+            if(bigData.size()==0){
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.bigLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済み大目標なし");
+
+            }else {
+                bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, bigTitle));
+            }
 
             for(int i=0;i<middleData.size();i++){//中目標のうち削除した大目標が上にあるデータを配列から削除
                 if(bid == Integer.parseInt(middleData.get(i).get("big"))){
                     middleData.remove(i);
                     middleTitle.remove(i);
                     i--;//削除した分インデックスを戻す
-                    middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+                    if(middleData.size()==0){
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.middleLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済み中目標なし");
+
+                    }else {
+                        middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, middleTitle));
+                    }
 
                 }
             }
@@ -1101,16 +1318,28 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     smallTitle.remove(i);
                     i--;//削除した分インデックスを戻す
 
-                    MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
-                        @Override
-                        void onRecycleItemClick(View view, int position, String itemData) {
-                            onSmallItemClick(view,position,itemData);
-                        }
-                    };
-                    sList.setAdapter(adapter);
+                    if(smallData.size()==0){ //小目標がない時レイアウトを消す
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.smallLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済み小目標なし");
+                    }else {
+                        MyAdapter adapter = new MyAdapter(smallTitle) {//リストクリック時の処理
+                            @Override
+                            void onRecycleItemClick(View view, int position, String itemData) {
+                                onSmallItemClick(view, position, itemData);
+                            }
+                        };
+                        sList.setAdapter(adapter);
+                    }
                     sid = 0;
                     sedit.setEnabled(false);
                     sdl.setEnabled(false);
+                    sfin.setEnabled(false);
                 }
             }
             if(bigData.size()>0){ //大目標が存在するとき
@@ -1121,6 +1350,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 bid = 0;
                 bedit.setEnabled(false); //編集ボタン無効化
                 bdl.setEnabled(false); //削除ボタン無効化
+                bfin.setEnabled(false);
             }
             if(middleData.size()>0){ //中目標が存在するとき
                 middleTarget.setSelection(0);
@@ -1130,11 +1360,24 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 mid = 0;
                 medit.setEnabled(false); //編集ボタン無効化
                 mdl.setEnabled(false); //削除ボタン無効化
+                mfin.setEnabled(false);
             }
         }else if(dlevel.equals("middle")){
             middleData.remove(middleDel);
             middleTitle.remove(middleDel);
-            middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle));
+            if(middleData.size()==0){
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.middleLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済み中目標なし");
+
+            }else {
+                middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, middleTitle));
+            }
 
             for(int i=0;i<smallData.size();i++){//小目標のうち削除した中目標が上にあるデータを配列から削除
                 if(mid == Integer.parseInt(smallData.get(i).get("middle"))){
@@ -1142,16 +1385,28 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     smallTitle.remove(i);
                     i--;//削除した分インデックスを戻す
 
-                    MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
-                        @Override
-                        void onRecycleItemClick(View view, int position, String itemData) {
-                            onSmallItemClick(view,position,itemData);
-                        }
-                    };
-                    sList.setAdapter(adapter);
+                    if(smallData.size()==0){ //小目標がない時レイアウトを消す
+                        //レイアウトを取得して消去しブランクにする
+                        ConstraintLayout layout;
+                        layout =
+                                (ConstraintLayout) requireActivity().findViewById(R.id.smallLayout);
+                        layout.removeAllViews();
+                        getLayoutInflater().inflate(R.layout.non_items, layout);
+                        TextView non = layout.findViewById(R.id.noItems);
+                        non.setText("完了済み小目標なし");
+                    }else {
+                        MyAdapter adapter = new MyAdapter(smallTitle) {//リストクリック時の処理
+                            @Override
+                            void onRecycleItemClick(View view, int position, String itemData) {
+                                onSmallItemClick(view, position, itemData);
+                            }
+                        };
+                        sList.setAdapter(adapter);
+                    }
                     sid = 0;
                     sedit.setEnabled(false);
                     sdl.setEnabled(false);
+                    sfin.setEnabled(false);
                 }
             }
             if(middleData.size()>0){ //中目標が存在するとき
@@ -1162,49 +1417,87 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 mid = 0;
                 medit.setEnabled(false); //編集ボタン無効化
                 mdl.setEnabled(false); //削除ボタン無効化
+                mfin.setEnabled(false);
             }
         }else if(dlevel.equals("small")){
             smallData.remove(smallDel);
             smallTitle.remove(smallDel);
 
-            MyAdapter adapter = new MyAdapter(smallTitle){//リストクリック時の処理
-                @Override
-                void onRecycleItemClick(View view, int position, String itemData) {
-                    onSmallItemClick(view,position,itemData);
-                }
-            };
-            sList.setAdapter(adapter);
+            if(smallData.size()==0){ //小目標がない時レイアウトを消す
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.smallLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済み小目標なし");
+            }else {
+                MyAdapter adapter = new MyAdapter(smallTitle) {//リストクリック時の処理
+                    @Override
+                    void onRecycleItemClick(View view, int position, String itemData) {
+                        onSmallItemClick(view, position, itemData);
+                    }
+                };
+                sList.setAdapter(adapter);
+            }
             sid = 0;
             sedit.setEnabled(false); //ボタンを無効化
             sdl.setEnabled(false);
+            sfin.setEnabled(false);
             smallDel = 0;
         }else if(dlevel.equals("schedule")){
             scheData.remove(scheDel);
             scheTitle.remove(scheDel);
-            MyAdapter adapter = new MyAdapter(scheTitle){//リストクリック時の処理
-                @Override
-                void onRecycleItemClick(View view, int position, String itemData) {
-                    onScheItemClick(view,position,itemData);
-                }
-            };
-            scheList.setAdapter(adapter);
+            if(scheData.size()==0){ //スケジュールがないとき当日のスケジュール枠を消す
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.scheduleLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済みの当日スケジュールなし");
+            }else {
+                MyAdapter adapter = new MyAdapter(scheTitle) {//リストクリック時の処理
+                    @Override
+                    void onRecycleItemClick(View view, int position, String itemData) {
+                        onScheItemClick(view, position, itemData);
+                    }
+                };
+                scheList.setAdapter(adapter);
+            }
             scheid = 0;
             scheedit.setEnabled(false);//ボタンを無効化
             schedl.setEnabled(false);
+            schefin.setEnabled(false);
             scheDel = 0;
         }else if(dlevel.equals("todo")){
             todoData.remove(todoDel);
             todoTitle.remove(todoDel);
-            MyAdapter adapter = new MyAdapter(todoTitle){//リストクリック時の処理
-                @Override
-                void onRecycleItemClick(View view, int position, String itemData) {
-                    onToDoItemClick(view,position,itemData);
-                }
-            };
-            todoList.setAdapter(adapter);
+            if(todoData.size()==0){ //TODOリストにデータがないときレイアウトを消す
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.todoLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済みのTODOタスクなし");
+            }else {
+
+                MyAdapter adapter = new MyAdapter(todoTitle) {//リストクリック時の処理
+                    @Override
+                    void onRecycleItemClick(View view, int position, String itemData) {
+                        onToDoItemClick(view, position, itemData);
+                    }
+                };
+                todoList.setAdapter(adapter);
+            }
             todoid = 0;
             todoedit.setEnabled(false);//ボタンを無効化
             tododl.setEnabled(false);
+            todofin.setEnabled(false);
             todoDel=0; //削除するデータのインデックスリセット
         }
 
@@ -1218,6 +1511,264 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
     @Override
     public void onDelDialogNeutralClick(DialogFragment dialog) {
     }
+
+
+    //データ完了解除時の処理
+    @Override
+    public void onFinDialogPositiveClick(DialogFragment dialog) {
+
+        if(dlevel.equals("middle")){
+            int big =
+                    Integer.parseInt(middleData.get(middleDel).get(
+                            "big"));
+            for(int i=0;i<bigData.size();i++){
+                if(big==Integer.parseInt(bigData.get(i).get("id"))){
+
+                    Toast.makeText(requireActivity(), "大目標が完了状態なので変更できません",
+                            Toast.LENGTH_SHORT).show();
+                    return; //大目標が完了状態のときデータ更新しない
+                }
+            }
+        }else if(dlevel.equals("small")){
+            int middle =
+                    Integer.parseInt(smallData.get(smallDel).get(
+                            "middle"));
+            for(int i=0;i<middleData.size();i++){
+                if(middle == Integer.parseInt(middleData.get(i).get("id"))){
+                    Toast.makeText(requireActivity(), "中目標が完了状態なので変更できません",
+                            Toast.LENGTH_SHORT).show();
+                    return;//中目標が完了状態のときデータ更新しない
+                }
+            }
+        }
+
+        // データ完了状態を解除する
+        try(SQLiteDatabase db = helper.getWritableDatabase()) {
+            db.beginTransaction();
+            try {
+
+
+                ContentValues cv = new ContentValues();
+                ContentValues lcv = new ContentValues(); //データ変更時のContentValues
+                cv.put("fin",0);
+                cv.put("proceed",0);
+                db.update("ToDoData",cv,"id=?",new String[]{""+did});
+
+                //更新ログへ書き込み
+                String[] cols = {"title","content","big","bigtitle","bighold"
+                        ,"middle","middletitle","middlehold","date",
+                        "important","memo","proceed","hold"};
+                // データから取得する列
+                Cursor cs = db.query("ToDoData", cols, "id=?",
+                        new String[]{""+did}, null, null, null, null);
+
+                boolean next = cs.moveToFirst();
+                if(next){
+                    lcv.put("ope","update");
+                    lcv.put("id",did);
+                    lcv.put("beforetitle",cs.getString(0));
+                    lcv.put("aftertitle",cs.getString(0));
+                    lcv.put("beforecontent",cs.getString(1));
+                    lcv.put("aftercontent",cs.getString(1));
+                    lcv.put("beforelevel",dlevel);
+                    lcv.put("afterlevel",dlevel);
+                    lcv.put("beforebig",cs.getInt(2));
+                    lcv.put("afterbig",cs.getInt(2));
+                    lcv.put("beforebigtitle",cs.getString(3));
+                    lcv.put("afterbigtitle",cs.getString(3));
+                    lcv.put("beforebighold",cs.getInt(4));
+                    lcv.put("afterbighold",cs.getInt(4));
+                    lcv.put("beforemiddle",cs.getInt(5));
+                    lcv.put("aftermiddle",cs.getInt(5));
+                    lcv.put("beforemiddletitle",cs.getString(6));
+                    lcv.put("aftermiddletitle",cs.getString(6));
+                    lcv.put("beforemiddlehold",cs.getInt(7));
+                    lcv.put("aftermiddlehold",cs.getInt(7));
+                    lcv.put("beforedate",cs.getString(8));
+                    lcv.put("afterdate",cs.getString(8));
+                    lcv.put("beforehold",cs.getInt(12));
+                    lcv.put("afterhold",cs.getInt(12));
+                    lcv.put("beforeimportant",cs.getInt(9));
+                    lcv.put("afterimportant",cs.getInt(9));
+                    lcv.put("beforememo",cs.getString(10));
+                    lcv.put("aftermemo",cs.getString(10));
+                    lcv.put("beforeproceed",100);
+                    lcv.put("afterproceed",0);
+                    lcv.put("beforefin",1);
+                    lcv.put("afterfin",0);
+
+                    db.insert("LogData",null,lcv); //データ変更をログに追加
+
+                    Cursor lcs = db.query("LogData",new String[]{"logid"},null,null,null,null,null,null);
+                    if(lcs.getCount()>300){ //ログ件数が３００件を超えたら古いのから削除
+                        String dsql = "delete from LogData order by logid asc limit "+(lcs.getCount()-300);
+                        db.execSQL(dsql);
+                    }
+                }
+
+
+                Toast.makeText(requireActivity(), "データを完了状態にしました",
+                        Toast.LENGTH_SHORT).show();
+
+
+                db.setTransactionSuccessful();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                db.endTransaction();
+            }
+        }
+
+
+        //データを完了にした後、配列から消す
+        if(dlevel.equals("big")){
+            bigData.remove(bigDel);
+            bigTitle.remove(bigDel);
+            if(bigData.size()==0){
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.bigLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済み大目標なし");
+            }else {
+                bigTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, bigTitle));
+            }
+
+            if(bigData.size()>0){ //大目標が存在するとき
+                bigTarget.setSelection(0);
+                bid = Integer.parseInt(bigData.get(0).get("id")); //大目標IDを初期状態に
+                bigDel = 0; //大目標の位置を一番上に
+            }else{//大目標が存在しないとき
+                bid = 0;
+                bedit.setEnabled(false); //編集ボタン無効化
+                bdl.setEnabled(false); //削除ボタン無効化
+                bfin.setEnabled(false);
+            }
+        }else if(dlevel.equals("middle")){
+            middleData.remove(middleDel);
+            middleTitle.remove(middleDel);
+            if(middleData.size()==0){
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.middleLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済み中目標なし");
+
+            }else {
+                middleTarget.setAdapter(new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, middleTitle));
+            }
+
+            if(middleData.size()>0){ //中目標が存在するとき
+                middleTarget.setSelection(0);
+                mid = Integer.parseInt(middleData.get(0).get("id")); //中目標を初期状態に
+                middleDel = 0;
+            }else{//中目標が存在しないとき
+                mid = 0;
+                medit.setEnabled(false); //編集ボタン無効化
+                mdl.setEnabled(false); //削除ボタン無効化
+                mfin.setEnabled(false);
+            }
+        }else if(dlevel.equals("small")){
+            smallData.remove(smallDel);
+            smallTitle.remove(smallDel);
+
+            if(smallData.size()==0){ //小目標がない時レイアウトを消す
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.smallLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済み小目標なし");
+            }else {
+                MyAdapter adapter = new MyAdapter(smallTitle) {//リストクリック時の処理
+                    @Override
+                    void onRecycleItemClick(View view, int position, String itemData) {
+                        onSmallItemClick(view, position, itemData);
+                    }
+                };
+                sList.setAdapter(adapter);
+            }
+            sid = 0;
+            sedit.setEnabled(false); //ボタンを無効化
+            sdl.setEnabled(false);
+            sfin.setEnabled(false);
+
+            smallDel = 0;
+        }else if(dlevel.equals("schedule")){
+            scheData.remove(scheDel);
+            scheTitle.remove(scheDel);
+            if(scheData.size()==0){ //スケジュールがないとき当日のスケジュール枠を消す
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.scheduleLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済みの当日スケジュールなし");
+            }else {
+                MyAdapter adapter = new MyAdapter(scheTitle) {//リストクリック時の処理
+                    @Override
+                    void onRecycleItemClick(View view, int position, String itemData) {
+                        onScheItemClick(view, position, itemData);
+                    }
+                };
+                scheList.setAdapter(adapter);
+            }
+            scheid = 0;
+            scheedit.setEnabled(false);//ボタンを無効化
+            schedl.setEnabled(false);
+            schefin.setEnabled(false);
+
+            scheDel = 0;
+        }else if(dlevel.equals("todo")){
+            todoData.remove(todoDel);
+            todoTitle.remove(todoDel);
+            if(todoData.size()==0){ //TODOリストにデータがないときレイアウトを消す
+                //レイアウトを取得して消去しブランクにする
+                ConstraintLayout layout;
+                layout =
+                        (ConstraintLayout) requireActivity().findViewById(R.id.todoLayout);
+                layout.removeAllViews();
+                getLayoutInflater().inflate(R.layout.non_items, layout);
+                TextView non = layout.findViewById(R.id.noItems);
+                non.setText("完了済みのTODOタスクなし");
+            }else {
+
+                MyAdapter adapter = new MyAdapter(todoTitle) {//リストクリック時の処理
+                    @Override
+                    void onRecycleItemClick(View view, int position, String itemData) {
+                        onToDoItemClick(view, position, itemData);
+                    }
+                };
+                todoList.setAdapter(adapter);
+            }
+            todoid = 0;
+            todoedit.setEnabled(false);//ボタンを無効化
+            tododl.setEnabled(false);
+            todofin.setEnabled(false);
+
+            todoDel = 0;
+        }
+
+    }
+    //データ完了キャンセル時
+    @Override
+    public void onFinDialogNegativeClick(DialogFragment dialog) {
+    }
+    //データ完了スルー
+    @Override
+    public void onFinDialogNeutralClick(DialogFragment dialog) {
+    }
+
 
 
     void getArrays(){ //データベースから取得してデータ配列に挿入する
@@ -1250,7 +1801,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     item.put("proceed",""+bcs.getInt(6));
                     item.put("fin",""+bfin);
 
-                        bigTitle.add(btitle);//大目標のタイトル
+                        bigTitle.add(btitle+"(完)");//大目標のタイトル
                         bigData.add(item);
                     }
                     next = bcs.moveToNext();
@@ -1275,7 +1826,8 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         item.put("big",""+big);
                         String btitle = mcs.getString(3);
                         item.put("bigtitle",btitle);
-                        item.put("bighold",""+mcs.getInt(4));
+                        int bighold = mcs.getInt(4);
+                        item.put("bighold", ""+bighold);
                         item.put("content",mcs.getString(5));
                         item.put("hold",""+mcs.getInt(6));
                         item.put("important",""+mcs.getInt(7));
@@ -1283,10 +1835,33 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                         item.put("proceed",""+mcs.getInt(9));
                         item.put("fin",""+mfin);
                             middleData.add(item); //中目標データ配列に追加
+                        boolean bf = false;//大目標の完了状態を判定変数
                             if (big != 0) { //大目標が存在するとき
-                                middleTitle.add(String.format("(%s)-%s", btitle, mtitle));
+                                for(int i=0;i<bigData.size();i++){
+                                    if(big==Integer.parseInt(bigData.get(i).get(
+                                            "id"))){//大目標が完了状態のとき
+                                        middleTitle.add(String.format("(%s" +
+                                                "(完)-%s(完)",btitle,mtitle));
+                                        bf = true;
+                                        break;
+                                    }
+                                }
+                                if(!bf){
+                                    if(bighold != 0){//大目標保留中の時
+                                        middleTitle.add(String.format("(%s(保))-%s" +
+                                                        "(完)",
+                                                btitle, mtitle));
+
+                                    }else{
+                                        middleTitle.add(String.format("(%s)-%s(完)",
+                                                btitle, mtitle));
+
+                                    }
+
+                                }
                             } else {
-                                middleTitle.add(String.format("大目標未設定-%s", mtitle));
+                                middleTitle.add(String.format("大目標未設定-%s(完)",
+                                        mtitle));
                             }
                         }
 
@@ -1302,28 +1877,174 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                 smallTitle.clear();
                 next = scs.moveToFirst();//カーソルの先頭に移動
                 while(next){
-                    String title = scs.getString(1);
-                    String bigtitle = scs.getString(3);
-                    String middletitle = scs.getString(6);
-                    int middle = scs.getInt(5);
                     HashMap<String,String> item = new HashMap<>();
                     item.put("id",""+scs.getInt(0));
+                    String title = scs.getString(1);
                     item.put("title",title);
-                    item.put("big",""+scs.getInt(2));
+                    int big = scs.getInt(2);
+                    item.put("big",""+ big);
+                    String bigtitle = scs.getString(3);
                     item.put("bigtitle",bigtitle);
-                    item.put("bighold",""+scs.getInt(4));
+                    int bighold = scs.getInt(4);
+                    item.put("bighold",""+ bighold);
+                    int middle = scs.getInt(5);
                     item.put("middle",""+middle);
+                    String middletitle = scs.getString(6);
                     item.put("middletitle",middletitle);
-                    item.put("middlehold",""+scs.getInt(7));
+                    int middlehold = scs.getInt(7);
+                    item.put("middlehold",""+middlehold);
                     item.put("content",scs.getString(8));
                     item.put("important",""+scs.getInt(9));
                     item.put("memo",scs.getString(10));
                     item.put("proceed",""+scs.getInt(11));
                     item.put("fin",""+scs.getInt(12));
-                    if(middle != 0){ //中目標が存在するとき
-                        smallTitle.add(String.format("(%s)-(%s)-%s",bigtitle,middletitle,title));
-                    }else{
-                        smallTitle.add(String.format("大目標未設定-中目標未設定-%s",title));
+                    boolean bf = false;
+                    boolean mf = false;
+                    if(big != 0){//大目標が存在するとき
+                        for(int i=0;i<bigData.size();i++){
+                            if(big==Integer.parseInt(bigData.get(i).get("id"))){//大目標が完了状態の時
+
+                                for(int j=0;j<middleData.size();j++){
+                                    if(middle==Integer.parseInt(middleData.get(j).get(
+                                            "id"))){//中目標が完了状態のとき
+                                        smallTitle.add(String.format("(%s" +
+                                                "(完))-" +
+                                                "(%s" +
+                                                "(完))-%s(完)",bigtitle,
+                                                middletitle,title));
+                                        mf = true;//中目標完了状態
+                                        break;
+                                    }
+                                }
+                                if(!mf){//中目標が未完了状態の時
+                                    if(middlehold != 0){//中目標保留中の時
+                                        smallTitle.add(String.format("(%s" +
+                                                        "(完))-" +
+                                                        "%s(保))-%s" +
+                                                        "(完)",
+                                                bigtitle, middletitle,
+                                                title));
+
+                                    }else{//中目標・非保留状態
+                                        smallTitle.add(String.format(
+                                                "(%s(完))-(%s)-%s(完)",
+                                                bigtitle, middletitle,
+                                                title));
+
+                                    }
+
+                                }
+
+                                bf = true;//大目標は完了状態
+                                break;
+                            }
+                        }
+                        if(!bf){//大目標が未完了状態のとき
+                            if(bighold != 0){//大目標保留中の時
+
+                                for(int j=0;j<middleData.size();j++){
+                                    if(middle==Integer.parseInt(middleData.get(j).get(
+                                            "id"))){//中目標が完了状態のとき
+                                        smallTitle.add(String.format("(%s" +
+                                                        "(保))-" +
+                                                        "(%s" +
+                                                        "(完))-%s(完)",bigtitle,
+                                                middletitle,title));
+                                        mf = true;//中目標完了状態
+                                        break;
+                                    }
+                                }
+                                if(!mf){//中目標が未完了状態の時
+                                    if(middlehold != 0){//中目標保留中の時
+                                        smallTitle.add(String.format("(%s" +
+                                                        "(保))-" +
+                                                        "(%s(保))-%s" +
+                                                        "(完)",
+                                                bigtitle, middletitle,
+                                                title));
+
+                                    }else{//中目標・非保留状態
+                                        smallTitle.add(String.format(
+                                                "(%s(保))-(%s)-%s(完)",
+                                                bigtitle, middletitle,
+                                                title));
+
+                                    }
+
+                                }
+                            }else{//大目標が非保留状態
+
+                                for(int j=0;j<middleData.size();j++){
+                                    if(middle==Integer.parseInt(middleData.get(j).get(
+                                            "id"))){//中目標が完了状態のとき
+                                        smallTitle.add(String.format("(%s" +
+                                                        ")-" +
+                                                        "(%s" +
+                                                        "(完))-%s(完)",bigtitle,
+                                                middletitle,title));
+                                        mf = true;//中目標完了状態
+                                        break;
+                                    }
+                                }
+                                if(!mf){//中目標が未完了状態の時
+                                    if(middlehold != 0){//中目標保留中の時
+                                        smallTitle.add(String.format("(%s" +
+                                                        ")-" +
+                                                        "%s(保))-%s" +
+                                                        "(完)",
+                                                bigtitle, middletitle,
+                                                title));
+
+                                    }else{//中目標・非保留状態
+                                        smallTitle.add(String.format(
+                                                "(%s)-(%s)-%s(完)",
+                                                bigtitle, middletitle,
+                                                title));
+
+                                    }
+
+                                }
+                            }
+                        }
+
+
+                    }else{//大目標が未設定のとき
+
+                        if(middle != 0){ //中目標が存在
+                            for(int j=0;j<middleData.size();j++){
+                                if(middle==Integer.parseInt(middleData.get(j).get(
+                                        "id"))){//中目標が完了状態のとき
+                                    smallTitle.add(String.format("大目標未設定-" +
+                                                    "(%s" +
+                                                    "(完))-%s(完)",
+                                            middletitle,title));
+                                    mf = true;//中目標完了状態
+                                    break;
+                                }
+                            }
+                            if(!mf){//中目標が未完了状態の時
+                                if(middlehold != 0){//中目標保留中の時
+                                    smallTitle.add(String.format("大目標未設定-" +
+                                                    "(%s(保))-%s" +
+                                                    "(完)",
+                                             middletitle,
+                                            title));
+
+                                }else{//中目標・非保留状態
+                                    smallTitle.add(String.format(
+                                            "大目標未設定-(%s)-%s(完)",
+                                             middletitle,
+                                            title));
+
+                                }
+
+                            }
+                        }else{//中目標未設定
+                            smallTitle.add(String.format(
+                                    "大目標未設定-中目標未設定-%s(完)",title));
+
+                        }
+
                     }
                     smallData.add(item); //中目標データ配列に追加
                     next = scs.moveToNext();
@@ -1348,7 +2069,8 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     item.put("proceed",schecs.getString(6));
                     item.put("fin",schecs.getString(7));
                     scheData.add(item); //中目標データ配列に追加
-                    scheTitle.add(String.format("[%s]%s",item.get("date"),item.get("title")));
+                    scheTitle.add(String.format("[%s]%s(完)",item.get("date"),
+                            item.get("title")));
                     next = schecs.moveToNext();
                 }
 
@@ -1370,7 +2092,7 @@ public class FinishFragment extends Fragment  implements ProgressDialogFragment.
                     item.put("proceed",todocs.getString(5));
                     item.put("fin",todocs.getString(6));
                     todoData.add(item); //中目標データ配列に追加
-                    todoTitle.add(String.format("%s",item.get("title")));
+                    todoTitle.add(String.format("%s(完)",item.get("title")));
                     next = todocs.moveToNext();
                 }
 

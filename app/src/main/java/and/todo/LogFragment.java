@@ -120,6 +120,7 @@ public class LogFragment extends Fragment {
         logBack.setOnClickListener(v->{
             //ログからデータを復旧する
 
+            //復旧の為、取得データの前後を入れ替える
             String ope = "";
             int id = Integer.parseInt(logData.get(selectId).get("id"));
             String beforetitle = logData.get(selectId).get("aftertitle");
@@ -167,7 +168,8 @@ public class LogFragment extends Fragment {
                                 beforebigtitle = big.getString(0);
                                 beforebighold = big.getInt(1);
                             } else {
-                                beforebigtitle = "大目標未設定";
+                                beforebigtitle = "";
+                                beforebig = 0; //大目標がないため初期化
                                 beforebighold = 0;
                             }
 
@@ -190,7 +192,8 @@ public class LogFragment extends Fragment {
                                 beforebigtitle = big.getString(0);
                                 beforebighold = big.getInt(1);
                             } else {
-                                beforebigtitle = "大目標未設定";
+                                beforebigtitle = "";
+                                beforebig = 0; //大目標がないため初期化
                                 beforebighold = 0;
                             }
 
@@ -200,7 +203,8 @@ public class LogFragment extends Fragment {
                                 beforemiddletitle = middle.getString(0);
                                 beforemiddlehold = middle.getInt(1);
                             } else {
-                                beforemiddletitle = "中目標未設定";
+                                beforemiddletitle = "";
+                                beforemiddle = 0;
                                 beforemiddlehold = 0;
                             }
                             db.setTransactionSuccessful();
@@ -227,7 +231,8 @@ public class LogFragment extends Fragment {
                                 afterbigtitle = big.getString(0);
                                 afterbighold = big.getInt(1);
                             } else {
-                                afterbigtitle = "大目標未設定";
+                                afterbigtitle = "";
+                                afterbig = 0;
                                 afterbighold = 0;
                                 afterhold = 1; //大目標がなければ保留状態にする
                             }
@@ -238,7 +243,8 @@ public class LogFragment extends Fragment {
                                 beforebigtitle = big.getString(0);
                                 beforebighold = big.getInt(1);
                             } else {
-                                beforebigtitle = "大目標未設定";
+                                beforebigtitle = "";
+                                beforebig = 0;
                                 beforebighold = 0;
                             }
 
@@ -263,7 +269,8 @@ public class LogFragment extends Fragment {
                                 afterbigtitle = big.getString(0);
                                 afterbighold = big.getInt(1);
                             } else {
-                                afterbigtitle = "大目標未設定";
+                                afterbigtitle = "";
+                                afterbig = 0;
                                 afterbighold = 0;
                                 afterhold = 1; //大目標がなければ保留状態にする
                             }
@@ -274,7 +281,8 @@ public class LogFragment extends Fragment {
                                 aftermiddletitle = middle.getString(0);
                                 aftermiddlehold = middle.getInt(1);
                             } else {
-                                aftermiddletitle = "中目標未設定";
+                                aftermiddletitle = "";
+                                aftermiddle = 0;
                                 aftermiddlehold = 0;
                                 afterhold = 1;
                             }
@@ -285,7 +293,8 @@ public class LogFragment extends Fragment {
                                 beforebigtitle = big.getString(0);
                                 beforebighold = big.getInt(1);
                             } else {
-                                beforebigtitle = "大目標未設定";
+                                beforebigtitle = "";
+                                beforebig = 0;
                                 beforebighold = 0;
                             }
 
@@ -295,7 +304,8 @@ public class LogFragment extends Fragment {
                                 beforemiddletitle = middle.getString(0);
                                 beforemiddlehold = middle.getInt(1);
                             } else {
-                                beforemiddletitle = "中目標未設定";
+                                beforemiddletitle = "";
+                                beforemiddle = 0;
                                 beforemiddlehold = 0;
                             }
 
@@ -319,12 +329,13 @@ public class LogFragment extends Fragment {
                         try {
                             String[] cols = {"title", "hold"};
                             String[] sel = {"" + logData.get(selectId).get("beforebig")};
-                            Cursor big = db.query("LogData", cols, "id=?", sel, null, null, null, null);
+                            Cursor big = db.query("ToDoData", cols, "id=?", sel, null, null, null, null);
                             if (big.moveToFirst()) {
                                 afterbigtitle = big.getString(0);
                                 afterbighold = big.getInt(1);
                             } else {
-                                afterbigtitle = "大目標未設定";
+                                afterbigtitle = "";
+                                afterbig = 0;
                                 afterbighold = 0;
                                 afterhold = 1; //大目標がなければ保留状態にする
                             }
@@ -344,23 +355,25 @@ public class LogFragment extends Fragment {
                         try {
                             String[] cols = {"title", "hold"};
                             String[] bigsel = {"" + logData.get(selectId).get("beforebig")};
-                            Cursor big = db.query("LogData", cols, "id=?", bigsel, null, null, null, null);
+                            Cursor big = db.query("ToDoData", cols, "id=?", bigsel, null, null, null, null);
                             if (big.moveToFirst()) {
                                 afterbigtitle = big.getString(0);
                                 afterbighold = big.getInt(1);
                             } else {
-                                afterbigtitle = "大目標未設定";
+                                afterbigtitle = "";
+                                afterbig = 0;
                                 afterbighold = 0;
                                 afterhold = 1; //大目標がなければ保留状態にする
                             }
 
                             String[] middlesel = {"" + logData.get(selectId).get("beforemiddle")};
-                            Cursor middle = db.query("LogData", cols, "id=?", middlesel, null, null, null, null);
+                            Cursor middle = db.query("ToDoData", cols, "id=?", middlesel, null, null, null, null);
                             if (middle.moveToFirst()) {
                                 aftermiddletitle = middle.getString(0);
                                 aftermiddlehold = middle.getInt(1);
                             } else {
-                                aftermiddletitle = "中目標未設定";
+                                aftermiddletitle = "";
+                                aftermiddle = 0;
                                 aftermiddlehold = 0;
                                 afterhold = 1;
                             }
@@ -419,6 +432,7 @@ public class LogFragment extends Fragment {
                         cv.put("proceed",afterproceed);
                         cv.put("fin",afterfin);
                     }
+
                     lcv.put("aftertitle",aftertitle);
                     lcv.put("afterlevel",afterlevel);
                     lcv.put("afterhold",afterhold);
@@ -434,6 +448,25 @@ public class LogFragment extends Fragment {
                     lcv.put("aftermemo",aftermemo);
                     lcv.put("afterproceed",afterproceed);
                     lcv.put("afterfin",afterfin);
+
+                    if(beforefin==0 && afterfin==1)
+                    {//完了状態に変更したログを戻す際のデータ
+                        cv.put("proceed",0);
+                        cv.put("fin",0);
+                        lcv.put("beforeproceed",100);
+                        lcv.put("afterproceed",0);
+                        lcv.put("beforefin",1);
+                        lcv.put("afterfin",0);
+                    }
+                    else if(beforefin==1 && afterfin==0)
+                    {//完了状態から解除したログを戻す際のデータ
+                        cv.put("proceed",100);
+                        cv.put("fin",1);
+                        lcv.put("beforeproceed",0);
+                        lcv.put("afterproceed",100);
+                        lcv.put("beforefin",0);
+                        lcv.put("afterfin",1);
+                    }
 
                     if (ope.equals("delete")) { //挿入したデータを削除する
 
@@ -507,13 +540,12 @@ public class LogFragment extends Fragment {
 
                         if(afterlevel.equals("big")){ //大目標変更時その下の中小目標の大目標を変更
                             if(afterhold==1){//大目標保留時小目標の上の中目標も保留に
+                                db.update("ToDoData",bcv,"level=? and big=?",new String[]{"middle",""+id});
                                 bcv.put("middlehold",afterhold);
                                 db.update("ToDoData",bcv,"level=? and big=?",new String[]{"small",""+id});
                             }else{//大目標が非保留時中小目標の大目標の保留状態も非保留とする
-                                bcv.put("bighold",afterhold);
-                                db.update("ToDoData",bcv,"level=? and big=?",new String[]{"small",""+id});
+                                db.update("ToDoData",bcv,"big=?",new String[]{""+id});
                             }
-                            db.update("ToDoData",bcv,"level=? and big=?",new String[]{"middle",""+id});
                         }else if(afterlevel.equals("middle")){ //中目標変更時その下の小目標の中目標を変更
                             db.update("ToDoData",mcv,"middle=?",new String[]{""+id});
                         }
@@ -741,89 +773,319 @@ public class LogFragment extends Fragment {
                     }else if(item.get("ope").equals("update")){ //更新データ
                         String edit = ""; //更新情報の文字列
                         if(item.get("beforelevel").equals("big")){ //大目標データ編集
-                            if(Integer.parseInt(item.get("beforehold"))==1){ //更新前データが保留状態のとき
-                                edit = String.format("大目標の[%s(保)]を",item.get("beforetitle"));
-                            }else{ //更新前データが非保留状態のとき
-                                edit = String.format("大目標の[%s]を",item.get("beforetitle"));
+
+                            int bigBeforeFin = Integer.parseInt(item.get(
+                                    "beforefin"));
+                            int bigAfterFin = Integer.parseInt(item.get(
+                                    "afterfin"));
+
+                            if(bigBeforeFin==1 && bigAfterFin==0)
+                            {//データを完了状態から解除したとき
+
+                                edit = String.format("大目標の[%s(完)]を", item.get("beforetitle"));
+
+                                if (Integer.parseInt(item.get("afterhold")) == 1) {
+                                    edit += String.format("大目標の[%s(保)" +
+                                            "]に変更しました", item.get("aftertitle"));
+                                } else {
+                                    edit += String.format("大目標の[%s" +
+                                            "]に変更しました", item.get("aftertitle"));
+                                }
+
                             }
-                            if(Integer.parseInt(item.get("afterhold"))==1){ //更新後データが保留状態のとき
-                                edit += String.format("大目標の[%s(保)]に変更しました",item.get("aftertitle"));
-                            }else{ //更新後データが非保留状態のとき
-                                edit += String.format("大目標の[%s]に変更しました",item.get("aftertitle"));
+                            else if(bigBeforeFin==0 && bigAfterFin==1)
+                            {//データを完了状態としたとき
+                                if (Integer.parseInt(item.get("beforehold")) == 1) {
+                                    edit = String.format("大目標の[%s(保)" +
+                                            "]を", item.get("beforetitle"));
+                                } else {
+                                    edit = String.format("大目標の[%s" +
+                                            "]を", item.get("beforetitle"));
+                                }
+
+                                edit += String.format("大目標の[%s(完)" +
+                                        "]に変更しました",item.get("aftertitle"));
+
+                            }
+                            else {
+
+                                if (Integer.parseInt(item.get("beforehold")) == 1) { //更新前データが保留状態のとき
+                                    edit = String.format("大目標の[%s(保)]を", item.get("beforetitle"));
+                                } else { //更新前データが非保留状態のとき
+                                    edit = String.format("大目標の[%s]を", item.get("beforetitle"));
+                                }
+                                if (Integer.parseInt(item.get("afterhold")) == 1) { //更新後データが保留状態のとき
+                                    edit += String.format("大目標の[%s(保)]に変更しました", item.get("aftertitle"));
+                                } else { //更新後データが非保留状態のとき
+                                    edit += String.format("大目標の[%s]に変更しました", item.get("aftertitle"));
+                                }
+
                             }
                         }else if(item.get("beforelevel").equals("middle")){//中目標データ編集
 
-                            if(Integer.parseInt(item.get("beforebighold"))==1){ //大目標・保留中
-                                edit = String.format("中目標の[(%s(保))-%s(保)]を",item.get("beforebigtitle"),item.get("beforetitle"));
-                            }else{ //大目標・非保留中
-                                if(Integer.parseInt(item.get("beforehold")) == 1){ //中目標・保留中
-                                    edit = String.format("中目標の[(%s)-%s(保)]を",item.get("beforebigtitle"),item.get("beforetitle"));
-                                }else{
-                                    edit = String.format("中目標の[(%s)-%s]を",item.get("beforebigtitle"),item.get("beforetitle"));
+                            int midBeforeFin = Integer.parseInt(item.get(
+                                    "beforefin"));
+                            int midAfterFin = Integer.parseInt(item.get(
+                                    "afterfin"));
+
+                            if(midBeforeFin==1 && midAfterFin==0)
+                            {//データを完了状態から解除したとき
+
+                                if (Integer.parseInt(item.get("beforebighold")) == 1) { //大目標・保留中
+                                    edit = String.format("中目標の[(%s(保))-%s(完)" +
+                                            "]を", item.get("beforebigtitle"), item.get("beforetitle"));
+                                } else { //大目標・非保留中
+                                        edit = String.format("中目標の[(%s)-%s(完)" +
+                                                "]を", item.get("beforebigtitle"), item.get("beforetitle"));
+
                                 }
+                                if (Integer.parseInt(item.get("afterbighold")) == 1) { //大目標・保留中
+                                    edit += String.format("中目標の[(%s(保))-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftertitle"));
+                                } else { //大目標・非保留中
+                                    if (Integer.parseInt(item.get("afterhold")) == 1) { //中目標・保留中
+                                        edit += String.format("中目標の[(%s)-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftertitle"));
+                                    } else {
+                                        edit += String.format("中目標の[(%s)-%s]に変更しました", item.get("afterbigtitle"), item.get("aftertitle"));
+                                    }
+                                }
+
                             }
-                            if(Integer.parseInt(item.get("afterbighold"))==1){ //大目標・保留中
-                                edit += String.format("中目標の[(%s(保))-%s(保)]に変更しました",item.get("afterbigtitle"),item.get("aftertitle"));
-                            }else{ //大目標・非保留中
-                                if(Integer.parseInt(item.get("afterhold")) == 1){ //中目標・保留中
-                                    edit += String.format("中目標の[(%s)-%s(保)]に変更しました",item.get("afterbigtitle"),item.get("aftertitle"));
-                                }else{
-                                    edit += String.format("中目標の[(%s)-%s]に変更しました",item.get("afterbigtitle"),item.get("aftertitle"));
+                            else if(midBeforeFin==0 && midAfterFin==1)
+                            {//データを完了状態としたとき
+
+                                if (Integer.parseInt(item.get("beforebighold")) == 1) { //大目標・保留中
+                                    edit = String.format("中目標の[(%s(保))-%s(保)]を", item.get("beforebigtitle"), item.get("beforetitle"));
+                                } else { //大目標・非保留中
+                                    if (Integer.parseInt(item.get("beforehold")) == 1) { //中目標・保留中
+                                        edit = String.format("中目標の[(%s)-%s(保)]を", item.get("beforebigtitle"), item.get("beforetitle"));
+                                    } else {
+                                        edit = String.format("中目標の[(%s)-%s]を", item.get("beforebigtitle"), item.get("beforetitle"));
+                                    }
+                                }
+                                if (Integer.parseInt(item.get("afterbighold")) == 1) { //大目標・保留中
+                                    edit += String.format("中目標の[(%s(保))-%s(完)" +
+                                            "]に変更しました", item.get(
+                                                    "afterbigtitle"),
+                                            item.get("aftertitle"));
+                                } else { //大目標・非保留中
+                                    edit += String.format("中目標の[(%s)-%s(完)" +
+                                            "]に変更しました", item.get(
+                                                    "afterbigtitle"),
+                                            item.get("aftertitle"));
+
+                                }
+
+                            }
+                            else {
+
+                                if (Integer.parseInt(item.get("beforebighold")) == 1) { //大目標・保留中
+                                    edit = String.format("中目標の[(%s(保))-%s(保)]を", item.get("beforebigtitle"), item.get("beforetitle"));
+                                } else { //大目標・非保留中
+                                    if (Integer.parseInt(item.get("beforehold")) == 1) { //中目標・保留中
+                                        edit = String.format("中目標の[(%s)-%s(保)]を", item.get("beforebigtitle"), item.get("beforetitle"));
+                                    } else {
+                                        edit = String.format("中目標の[(%s)-%s]を", item.get("beforebigtitle"), item.get("beforetitle"));
+                                    }
+                                }
+                                if (Integer.parseInt(item.get("afterbighold")) == 1) { //大目標・保留中
+                                    edit += String.format("中目標の[(%s(保))-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftertitle"));
+                                } else { //大目標・非保留中
+                                    if (Integer.parseInt(item.get("afterhold")) == 1) { //中目標・保留中
+                                        edit += String.format("中目標の[(%s)-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftertitle"));
+                                    } else {
+                                        edit += String.format("中目標の[(%s)-%s]に変更しました", item.get("afterbigtitle"), item.get("aftertitle"));
+                                    }
                                 }
                             }
 
                         }else if(item.get("beforelevel").equals("small")){//小目標データ編集
 
-                            if(Integer.parseInt(item.get("beforebighold"))==1){ //大目標・保留
-                                edit = String.format("小目標の[(%s(保))-(%s(保))-%s(保)]を",item.get("beforebigtitle"),item.get("beforemiddletitle"),item.get("beforetitle"));
-                            }else{//大目標・保留なし
-                                if(Integer.parseInt(item.get("beforemiddlehold"))==1){//中目標・保留
-                                    edit = String.format("小目標の[(%s)-(%s(保))-%s(保)]を",item.get("beforebigtitle"),item.get("beforemiddletitle"),item.get("beforetitle"));
-                                }else{//中目標・保留無し
-                                    if(Integer.parseInt(item.get("beforehold"))==1){//小目標・保留中
-                                        edit = String.format("小目標の[(%s)-(%s)-%s(保)]を",item.get("beforebigtitle"),item.get("beforemiddletitle"),item.get("beforetitle"));
-                                    }else{//小目標・保留なし
-                                        edit = String.format("小目標の[(%s)-(%s)-%s]を",item.get("beforebigtitle"),item.get("beforemiddletitle"),item.get("beforetitle"));
+                            int smallBeforeFin = Integer.parseInt(item.get(
+                                    "beforefin"));
+                            int smallAfterFin = Integer.parseInt(item.get(
+                                    "afterfin"));
+
+                            if(smallBeforeFin==1 && smallAfterFin==0)
+                            {//データを完了状態から解除したとき
+                                if (Integer.parseInt(item.get("beforebighold")) == 1) { //大目標・保留
+                                    edit = String.format("小目標の[(%s(保))-(%s(保)" +
+                                            ")-%s(完)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                } else {//大目標・保留なし
+                                    if (Integer.parseInt(item.get("beforemiddlehold")) == 1) {//中目標・保留
+                                        edit = String.format("小目標の[(%s)-(%s" +
+                                                "(保))-%s(完)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                    } else {//中目標・保留無し
+                                            edit = String.format("小目標の[(%s)-" +
+                                                    "(%s)-%s(完)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
                                     }
                                 }
-                            }
-                            if(Integer.parseInt(item.get("afterbighold"))==1){ //大目標・保留
-                                edit += String.format("小目標の[(%s(保))-(%s(保))-%s(保)]に変更しました",item.get("afterbigtitle"),item.get("aftermiddletitle"),item.get("aftertitle"));
-                            }else{//大目標・保留なし
-                                if(Integer.parseInt(item.get("aftermiddlehold"))==1){//中目標・保留
-                                    edit += String.format("小目標の[(%s)-(%s(保))-%s(保)]に変更しました",item.get("afterbigtitle"),item.get("aftermiddletitle"),item.get("aftertitle"));
-                                }else{//中目標・保留無し
-                                    if(Integer.parseInt(item.get("afterhold"))==1){//小目標・保留中
-                                        edit += String.format("小目標の[(%s)-(%s)-%s(保)]に変更しました",item.get("afterbigtitle"),item.get("aftermiddletitle"),item.get("aftertitle"));
-                                    }else{//小目標・保留なし
-                                        edit += String.format("小目標の[(%s)-(%s)-%s]に変更しました",item.get("afterbigtitle"),item.get("aftermiddletitle"),item.get("aftertitle"));
+                                if (Integer.parseInt(item.get("afterbighold")) == 1) { //大目標・保留
+                                    edit += String.format("小目標の[(%s(保))-(%s(保))-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                } else {//大目標・保留なし
+                                    if (Integer.parseInt(item.get("aftermiddlehold")) == 1) {//中目標・保留
+                                        edit += String.format("小目標の[(%s)-(%s(保))-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                    } else {//中目標・保留無し
+                                        if (Integer.parseInt(item.get("afterhold")) == 1) {//小目標・保留中
+                                            edit += String.format("小目標の[(%s)-(%s)-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                        } else {//小目標・保留なし
+                                            edit += String.format("小目標の[(%s)-(%s)-%s]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                        }
                                     }
+
                                 }
 
+                            }
+                            else if(smallBeforeFin==0 && smallAfterFin==1)
+                            {//データを完了状態としたとき
+                                if (Integer.parseInt(item.get("beforebighold")) == 1) { //大目標・保留
+                                    edit = String.format("小目標の[(%s(保))-(%s(保))-%s(保)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                } else {//大目標・保留なし
+                                    if (Integer.parseInt(item.get("beforemiddlehold")) == 1) {//中目標・保留
+                                        edit = String.format("小目標の[(%s)-(%s(保))-%s(保)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                    } else {//中目標・保留無し
+                                        if (Integer.parseInt(item.get("beforehold")) == 1) {//小目標・保留中
+                                            edit = String.format("小目標の[(%s)-(%s)-%s(保)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                        } else {//小目標・保留なし
+                                            edit = String.format("小目標の[(%s)-(%s)-%s]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                        }
+                                    }
+                                }
+                                if (Integer.parseInt(item.get("afterbighold")) == 1) { //大目標・保留
+                                    edit += String.format("小目標の[(%s(保))-(%s" +
+                                            "(保))-%s(完)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                } else {//大目標・保留なし
+                                    if (Integer.parseInt(item.get("aftermiddlehold")) == 1) {//中目標・保留
+                                        edit += String.format("小目標の[(%s)-(%s" +
+                                                "(保))-%s(完)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                    } else {//中目標・保留無し
+                                            edit += String.format("小目標の[(%s)-" +
+                                                    "(%s)-%s(完)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                    }
+
+                                }
+
+                            }
+                            else {
+
+                                if (Integer.parseInt(item.get("beforebighold")) == 1) { //大目標・保留
+                                    edit = String.format("小目標の[(%s(保))-(%s(保))-%s(保)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                } else {//大目標・保留なし
+                                    if (Integer.parseInt(item.get("beforemiddlehold")) == 1) {//中目標・保留
+                                        edit = String.format("小目標の[(%s)-(%s(保))-%s(保)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                    } else {//中目標・保留無し
+                                        if (Integer.parseInt(item.get("beforehold")) == 1) {//小目標・保留中
+                                            edit = String.format("小目標の[(%s)-(%s)-%s(保)]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                        } else {//小目標・保留なし
+                                            edit = String.format("小目標の[(%s)-(%s)-%s]を", item.get("beforebigtitle"), item.get("beforemiddletitle"), item.get("beforetitle"));
+                                        }
+                                    }
+                                }
+                                if (Integer.parseInt(item.get("afterbighold")) == 1) { //大目標・保留
+                                    edit += String.format("小目標の[(%s(保))-(%s(保))-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                } else {//大目標・保留なし
+                                    if (Integer.parseInt(item.get("aftermiddlehold")) == 1) {//中目標・保留
+                                        edit += String.format("小目標の[(%s)-(%s(保))-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                    } else {//中目標・保留無し
+                                        if (Integer.parseInt(item.get("afterhold")) == 1) {//小目標・保留中
+                                            edit += String.format("小目標の[(%s)-(%s)-%s(保)]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                        } else {//小目標・保留なし
+                                            edit += String.format("小目標の[(%s)-(%s)-%s]に変更しました", item.get("afterbigtitle"), item.get("aftermiddletitle"), item.get("aftertitle"));
+                                        }
+                                    }
+
+                                }
                             }
 
                         }else if(item.get("beforelevel").equals("schedule")){//スケジュールデータ編集
-                            if(Integer.parseInt(item.get("beforehold"))==1){
-                                edit = String.format("スケジュールの[%s[%s](保)]を",item.get("beforetitle"),item.get("beforedate"));
-                            }else{
-                                edit = String.format("スケジュールの[%s(%s)]を",item.get("beforetitle"),item.get("beforedate"));
+
+                            int scheBeforeFin = Integer.parseInt(item.get(
+                                    "beforefin"));
+                            int scheAfterFin = Integer.parseInt(item.get(
+                                    "afterfin"));
+
+                            if(scheBeforeFin==1 && scheAfterFin==0)
+                            {//データを完了状態から解除したとき
+                                edit = String.format("スケジュールの[%s[%s](完)" +
+                                        "]を", item.get("beforetitle"), item.get("beforedate"));
+
+                                if (Integer.parseInt(item.get("afterhold")) == 1) {
+                                    edit += String.format("スケジュールの[%s[%s](保)]に変更しました", item.get("aftertitle"), item.get("afterdate"));
+                                } else {
+                                    edit += String.format("スケジュールの[%s(%s)]に変更しました", item.get("aftertitle"), item.get("afterdate"));
+                                }
+
                             }
-                            if(Integer.parseInt(item.get("afterhold"))==1){
-                                edit += String.format("スケジュールの[%s[%s](保)]に変更しました",item.get("aftertitle"),item.get("afterdate"));
-                            }else{
-                                edit += String.format("スケジュールの[%s(%s)]に変更しました",item.get("aftertitle"),item.get("afterdate"));
+                            else if(scheBeforeFin==0 && scheAfterFin==1)
+                            {//データを完了状態としたとき
+                                if (Integer.parseInt(item.get("beforehold")) == 1) {
+                                    edit = String.format("スケジュールの[%s[%s](保)]を", item.get("beforetitle"), item.get("beforedate"));
+                                } else {
+                                    edit = String.format("スケジュールの[%s(%s)]を", item.get("beforetitle"), item.get("beforedate"));
+                                }
+                                edit += String.format("スケジュールの[%s(%s)" +
+                                        "(完)]に変更しました", item.get("aftertitle"),
+                                        item.get("afterdate"));
+
+                            }
+                            else {
+
+                                if (Integer.parseInt(item.get("beforehold")) == 1) {
+                                    edit = String.format("スケジュールの[%s[%s](保)]を", item.get("beforetitle"), item.get("beforedate"));
+                                } else {
+                                    edit = String.format("スケジュールの[%s(%s)]を", item.get("beforetitle"), item.get("beforedate"));
+                                }
+                                if (Integer.parseInt(item.get("afterhold")) == 1) {
+                                    edit += String.format("スケジュールの[%s[%s](保)]に変更しました", item.get("aftertitle"), item.get("afterdate"));
+                                } else {
+                                    edit += String.format("スケジュールの[%s(%s)]に変更しました", item.get("aftertitle"), item.get("afterdate"));
+                                }
                             }
                         }else if(item.get("beforelevel").equals("todo")){//やることリスト編集
 
-                            if(Integer.parseInt(item.get("beforehold"))==1){
-                                edit = String.format("やることリストの[%s(保)]を",item.get("beforetitle"));
-                            }else{
-                                edit = String.format("やることリストの[%s]を",item.get("beforetitle"));
+                            int todoBeforeFin = Integer.parseInt(item.get(
+                                    "beforefin"));
+                            int todoAfterFin = Integer.parseInt(item.get(
+                                    "afterfin"));
+
+                            if(todoBeforeFin==1 && todoAfterFin==0)
+                            {//データを完了状態から解除したとき
+                                edit = String.format("やることリストの[%s(完)" +
+                                        "]を", item.get("beforetitle"));
+
+                                if (Integer.parseInt(item.get("afterhold")) == 1) {
+                                    edit += String.format("やることリストの[%s(保)" +
+                                            "]に変更しました", item.get("aftertitle"));
+                                } else {
+                                    edit += String.format("やることリストの[%s" +
+                                                    "]に変更しました"
+                                            , item.get("aftertitle"));
+                                }
+
                             }
-                            if(Integer.parseInt(item.get("afterhold"))==1){
-                                edit += String.format("やることリストの[%s(保)]に変更しました",item.get("aftertitle"));
-                            }else{
-                                edit += String.format("やることリストの[%s]に変更しました",item.get("aftertitle"));
+                            else if(todoBeforeFin==0 && todoAfterFin==1)
+                            {//データを完了状態としたとき
+                                if (Integer.parseInt(item.get("beforehold")) == 1) {
+                                    edit = String.format("やることリストの[%s(保)]を",
+                                            item.get("beforetitle"));
+                                } else {
+                                    edit = String.format("やることリストの[%s]を", item.get("beforetitle"));
+                                }
+                                edit += String.format("やることリストの[%s" +
+                                                "(完)]に変更しました", item.get("aftertitle"));
+
+                            }
+                            else {
+
+                                if (Integer.parseInt(item.get("beforehold")) == 1) {
+                                    edit = String.format("やることリストの[%s(保)]を", item.get("beforetitle"));
+                                } else {
+                                    edit = String.format("やることリストの[%s]を", item.get("beforetitle"));
+                                }
+                                if (Integer.parseInt(item.get("afterhold")) == 1) {
+                                    edit += String.format("やることリストの[%s(保)]に変更しました", item.get("aftertitle"));
+                                } else {
+                                    edit += String.format("やることリストの[%s]に変更しました", item.get("aftertitle"));
+                                }
                             }
                         }
 

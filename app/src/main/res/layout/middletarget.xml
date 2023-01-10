@@ -8,6 +8,18 @@
     android:orientation="vertical">
 
     <TextView
+        android:id="@+id/bTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btitle"
+        android:textSize="20sp" />
+
+    <Spinner
+        android:id="@+id/bSpin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="45sp" />
+    <TextView
         android:id="@+id/mTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

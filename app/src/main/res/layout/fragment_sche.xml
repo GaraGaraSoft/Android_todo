@@ -59,7 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#8BC34A"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/todayScheduleTitle"
@@ -81,7 +81,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#8BC34A"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/pastScheduleTitle"
@@ -114,7 +114,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#8BC34A"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/futureScheduleTitle"
@@ -193,6 +193,92 @@
                 android:layout_marginTop="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+
+            <Button
+                android:id="@+id/futureHoldButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/futureEditButton"
+                app:layout_constraintTop_toBottomOf="@+id/futureScheduleTitle" />
+
+            <Button
+                android:id="@+id/futureFinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/futureHoldButton"
+                app:layout_constraintTop_toBottomOf="@+id/futureScheduleTitle" />
+
+
+            <Button
+                android:id="@+id/todayHoldButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/todayEditButton"
+                app:layout_constraintTop_toBottomOf="@+id/todayScheduleTitle" />
+
+            <Button
+                android:id="@+id/todayFinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/todayHoldButton"
+                app:layout_constraintTop_toBottomOf="@+id/todayScheduleTitle" />
+
+            <Button
+                android:id="@+id/pastHoldButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/pastEditButton"
+                app:layout_constraintTop_toBottomOf="@+id/pastScheduleTitle" />
+
+            <Button
+                android:id="@+id/pastFinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/pastHoldButton"
+                app:layout_constraintTop_toBottomOf="@+id/pastScheduleTitle" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

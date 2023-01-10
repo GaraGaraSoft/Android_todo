@@ -46,10 +46,10 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
     private int titleNum; //タイトル文字数
     private Button editBtn; //編集完了ボタン
     private int big=0; //上目標
-    private String bigtitle=""; //ToDo 上目標タイトル
+    private String bigtitle=""; // 上目標タイトル
     private int bighold=0;
     private int middle=0; //中目標
-    private String middletitle="";//ToDo 中目標タイトル
+    private String middletitle="";// 中目標タイトル
     private int middlehold=0;
     private String date = ""; //日付
     private int hold = 0; //保留判定(0は保留なし）
@@ -57,7 +57,7 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
     private String memo = ""; //進捗内容
     private int proceed = 0; //進捗度合い
     private int fin = 0; //完了判定
-    HashMap<String,String> beforeData = new HashMap<>(); //編集前のデータを保管するMAP
+    //HashMap<String,String> beforeData = new HashMap<>(); //編集前のデータを保管するMAP
     ArrayList<String> bigTitle = new ArrayList<>(); //編集画面で表示する大目標のタイトルを保管する配列
     ArrayList<HashMap<String,String>> bigData = new ArrayList<>(); //編集画面で表示する大目標のIDを保管するための配列
     ArrayList<String> middleTitle = new ArrayList<>();//編集画面で表示する中目標のタイトルを保管する配列
@@ -302,13 +302,14 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
 
                     if(level.equals("big")){ //大目標変更時その下の中小目標の大目標を変更
                         if(hold==1){//大目標保留時小目標の上の中目標も保留に
+                            db.update("ToDoData",bcv,"level=? and big=?",new String[]{"middle",""+id});
                             bcv.put("middlehold",hold);
                             db.update("ToDoData",bcv,"level=? and big=?",new String[]{"small",""+id});
                         }else{//大目標が非保留時中小目標の大目標の保留状態も非保留とする
                             bcv.put("bighold",hold);
+                            db.update("ToDoData",bcv,"level=? and big=?",new String[]{"middle",""+id});
                             db.update("ToDoData",bcv,"level=? and big=?",new String[]{"small",""+id});
                         }
-                        db.update("ToDoData",bcv,"level=? and big=?",new String[]{"middle",""+id});
                     }else if(level.equals("middle")){ //中目標変更時その下の小目標の中目標を変更
                         db.update("ToDoData",mcv,"middle=?",new String[]{""+id});
                     }
@@ -365,9 +366,9 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
             Spinner bSpin = (Spinner) view.findViewById(R.id.bSpin);
             ArrayAdapter<String> bigAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
             bSpin.setAdapter(bigAdapter);
-            middle=0; //中目標を初期化
-            middletitle = "";
-            middlehold=0;
+            //middle=0; //中目標を初期化
+            //middletitle = "";
+            //middlehold=0;
             date = ""; //日付を初期化
             for(int i=0;i<bigData.size();i++){ //大目標データから元々の選択を探し初期値に設定
                 if(big == Integer.parseInt(bigData.get(i).get("id"))){
@@ -405,8 +406,99 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
             // レイアウトをR.layout.sampleに変更する
             getLayoutInflater().inflate(R.layout.middletarget, layout);
 
-            //小目標を選択時、大中目標の選択肢を出す
+            Spinner bSpin = (Spinner) view.findViewById(R.id.bSpin);
             Spinner mSpin = (Spinner) view.findViewById(R.id.mSpin);
+            //小目標選択時の大目標の選択肢
+            ArrayAdapter<String> bigAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
+            bSpin.setAdapter(bigAdapter);
+            date = ""; //日付を初期化
+            for(int i=0;i<bigData.size();i++){ //大目標データから元々の選択を探し初期値に設定
+                if(big == Integer.parseInt(bigData.get(i).get("id"))){
+                    bSpin.setSelection(i);
+                    big = Integer.parseInt(bigData.get(i).get("id")); //選択された大目標情報を設定
+                    bigtitle = bigData.get(i).get("title"); //選択された大目標情報を設定
+                    bighold = Integer.parseInt(bigData.get(i).get("hold")); //選択された大目標情報の保留状態
+
+                    break;
+                }
+            }
+
+            bSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                    big = Integer.parseInt(bigData.get(i).get("id"));
+                    bigtitle = bigData.get(i).get("title");
+                    bighold = Integer.parseInt(bigData.get(i).get("hold"));
+
+                    //中目標を設定
+
+                    try(SQLiteDatabase db = helper.getReadableDatabase()){
+                        //トランザクション開始
+                        db.beginTransaction();
+                        try{
+
+                            String[] mcols = {"id", "title", "big","bigtitle",
+                                    "bighold","hold","fin"};//SQLデータから取得する列
+                            String[] mlevel = {"middle",""+big};//中目標のみを抽出
+                            Cursor mcs = db.query("ToDoData", mcols, "level=? and" +
+                                    " big=?", mlevel, null, null, null, null);
+                            middleData.clear(); //いったん配列を空にする
+                            middleTitle.clear();
+                            boolean next = mcs.moveToFirst();//カーソルの先頭に移動
+                            while (next) {
+
+                                HashMap<String, String> item = new HashMap<>();
+                                item.put("id", "" + mcs.getInt(0));
+                                item.put("title",mcs.getString(1));
+                                item.put("big", "" + mcs.getInt(2));
+                                item.put("bigtitle",mcs.getString(3));
+                                item.put("bighold",""+mcs.getInt(4));
+                                int h = mcs.getInt(5);
+                                item.put("hold",""+h);
+                                int f = mcs.getInt(6);
+                                item.put("fin",""+f);
+                                middleData.add(item); //中目標データ配列に追加
+                                if(f==1){//完了済
+                                    middleTitle.add(mcs.getString(1)+"(完)");
+                                }
+                                else if(h==1){//保留中
+                                    middleTitle.add(mcs.getString(1)+"(保)");
+                                }
+                                else{
+                                    middleTitle.add(mcs.getString(1));
+                                }
+                                next = mcs.moveToNext();
+                            }
+
+                            //トランザクション成功
+                            db.setTransactionSuccessful();
+                        }catch(SQLException e){
+                            e.printStackTrace();
+                        }finally{
+                            //トランザクションを終了
+                            db.endTransaction();
+                        }
+                    }
+
+                    ArrayAdapter<String> middleAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
+                    mSpin.setAdapter(middleAdapter);
+
+                    mSpin.setSelection(0);
+                    middle = Integer.parseInt(middleData.get(0).get("id"));
+                    //選択中の中目標を設定
+                    middletitle = middleData.get(0).get("title");
+                    //選択中の中目標のタイトル設定
+                    middlehold = Integer.parseInt(middleData.get(0).get("hold"));
+
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+
+            //小目標を選択時、中目標の選択肢を出す
             ArrayAdapter<String> middleAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
             mSpin.setAdapter(middleAdapter);
             date = ""; //日付を初期化
@@ -416,20 +508,15 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
                     middle = Integer.parseInt(middleData.get(i).get("id")); //選択中の中目標を設定
                     middletitle = middleData.get(i).get("title"); //選択中の中目標のタイトル設定
                     middlehold = Integer.parseInt(middleData.get(i).get("hold"));
-                    big = Integer.parseInt(middleData.get(i).get("big"));//選択中の大目標を設定
-                    bigtitle = middleData.get(i).get("bigtitle"); //選択中の大目標のタイトル設定
-                    bighold = Integer.parseInt(middleData.get(i).get("bighold")); //選択中の大目標の保留状態設定
                     break;
                 }
             }
 
 
+            //ToDo 中目標が変わっても再設定しなくていいか要テスト
             mSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                    big = Integer.parseInt(middleData.get(i).get("big"));
-                    bigtitle = middleData.get(i).get("bigtitle");
-                    bighold = Integer.parseInt(middleData.get(i).get("bighold"));
                     middle = Integer.parseInt(middleData.get(i).get("id"));
                     middletitle = middleData.get(i).get("title");
                     middlehold = Integer.parseInt(middleData.get(i).get("hold"));
@@ -510,65 +597,6 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
             db.beginTransaction();
             try{
 
-                if(level.equals("middle") || level.equals("small")) {
-                    //大目標を取得
-                    String[] bcols = {"id", "title","hold"};//SQLデータから取得する列
-                    String[] blevel = {"big","0"};//大目標のみを抽出
-                    Cursor bcs = db.query("ToDoData", bcols, "level=? and fin=?", blevel, null, null, null, null);
-                    bigData.clear(); //いったん配列を空にする
-                    bigTitle.clear();
-                    boolean next = bcs.moveToFirst();//カーソルの先頭に移動
-                    while (next) { //Cursorデータが空になるまでbigTitle,bigDataに加えていく
-                        HashMap<String,String> item = new HashMap<>();
-                        item.put("id",""+bcs.getInt(0));//大目標のID
-                        item.put("title",bcs.getString(1));
-                        item.put("hold",""+bcs.getInt(2));//大目標の待機状態
-                        bigData.add(item);
-                        if(bcs.getInt(2)==1){ //保留中
-                            bigTitle.add(bcs.getString(1)+"(保)");//大目標のタイトル
-                        }else{ //非保留中
-                            bigTitle.add(bcs.getString(1));//大目標のタイトル
-                        }
-                        next = bcs.moveToNext();
-                    }
-
-                    //中目標を取得
-                    String[] mcols = {"id", "title", "big","bigtitle","bighold","hold"};//SQLデータから取得する列
-                    String[] mlevel = {"middle","0"};//中目標のみを抽出
-                    Cursor mcs = db.query("ToDoData", mcols, "level=? and fin=?", mlevel, null, null, null, null);
-                    middleData.clear(); //いったん配列を空にする
-                    middleTitle.clear();
-                    next = mcs.moveToFirst();//カーソルの先頭に移動
-                    while (next) {
-                        HashMap<String, String> item = new HashMap<>();
-                        item.put("id", "" + mcs.getInt(0));
-                        item.put("title",mcs.getString(1));
-                        item.put("big", "" + mcs.getInt(2));
-                        item.put("bigtitle",mcs.getString(3));
-                        item.put("bighold",""+mcs.getInt(4));
-                        item.put("hold",""+mcs.getInt(5));
-                        middleData.add(item); //中目標データ配列に追加
-                        if(mcs.getInt(4)==1){ //大目標保留中
-                            if(mcs.getInt(5)==1){ //中目標保留中
-                                middleTitle.add(String.format("(%s(保))-%s(保)",mcs.getString(3),mcs.getString(1)));
-
-                            }else{
-                                middleTitle.add(String.format("(%s(保))-%s",mcs.getString(3),mcs.getString(1)));
-
-                            }
-                        }else{
-                            if(mcs.getInt(5)==1){ //中目標保留中
-                                middleTitle.add(String.format("(%s)-%s(保)",mcs.getString(3),mcs.getString(1)));
-
-                            }else{
-                                middleTitle.add(String.format("(%s)-%s",mcs.getString(3),mcs.getString(1)));
-
-                            }
-                        }
-                        next = mcs.moveToNext();
-                    }
-                }
-
                 //選択IDデータを取得
                 String[] sels = {"id","title","big","bigtitle","bighold","middle","middletitle","middlehold","date","content","hold","important","memo","proceed","fin"};
                 String[] sellevel = {level, String.valueOf(id)};
@@ -604,6 +632,93 @@ public class EditFragment extends Fragment implements DateDialogFragment.DateDia
                     lcv.put("beforeproceed",proceed);
                     fin = selcs.getInt(14);
                     lcv.put("beforefin",fin);
+                }
+
+                if(level.equals("middle") || level.equals("small")) {
+                    //大目標を取得
+                    String[] bcols = {"id", "title","hold","fin"};//SQL
+                    // データから取得する列
+                    String[] blevel = {"big"};//大目標のみを抽出
+                    Cursor bcs = db.query("ToDoData", bcols, "level=?", blevel, null, null, null, null);
+                    bigData.clear(); //いったん配列を空にする
+                    bigTitle.clear();
+                    next = bcs.moveToFirst();//カーソルの先頭に移動
+                    while (next) { //Cursorデータが空になるまでbigTitle,bigDataに加えていく
+                        int big = bcs.getInt(0);
+
+                        Cursor bigExist = db.query("ToDoData", new String[]{
+                                "count" +
+                                        "(*)"},
+                                "level" +
+                                "=? " +
+                                "and" +
+                                " big=?", new String[]{"middle",""+big}, null,
+                                null, null,
+                                        null);//大目標の下にある中目標の数
+
+                        bigExist.moveToFirst();
+
+                        if(bigExist.getInt(0) == 0){//下に中目標が存在しない大目標は飛ばす
+                            next = bcs.moveToNext();
+                            continue;
+                        }
+
+                        HashMap<String,String> item = new HashMap<>();
+                        item.put("id",""+big);//大目標のID
+                        item.put("title",bcs.getString(1));
+                        int h = bcs.getInt(2);
+                        item.put("hold",""+h);//大目標の待機状態
+                        int f = bcs.getInt(3);
+                        item.put("fin",""+f);
+                        bigData.add(item);
+                        if(f==1){//完了済みデータ
+                            bigTitle.add(bcs.getString(1)+"(完)");
+                        }
+                        else if(h==1){ //保留中
+                            bigTitle.add(bcs.getString(1)+"(保)");//大目標のタイトル
+                        }
+                        else{ //非保留中
+                            bigTitle.add(bcs.getString(1));//大目標のタイトル
+                        }
+                        next = bcs.moveToNext();
+                    }
+
+                    if(level.equals("small")){
+
+                        //中目標を取得
+                        String[] mcols = {"id", "title", "big","bigtitle",
+                                "bighold","hold","fin"};//SQLデータから取得する列
+                        String[] mlevel = {"middle",""+big};//中目標のみを抽出
+                        Cursor mcs = db.query("ToDoData", mcols, "level=? and" +
+                                " big=?", mlevel, null, null, null, null);
+                        middleData.clear(); //いったん配列を空にする
+                        middleTitle.clear();
+                        next = mcs.moveToFirst();//カーソルの先頭に移動
+                        while (next) {
+                            HashMap<String, String> item = new HashMap<>();
+                            item.put("id", "" + mcs.getInt(0));
+                            item.put("title",mcs.getString(1));
+                            item.put("big", "" + mcs.getInt(2));
+                            item.put("bigtitle",mcs.getString(3));
+                            item.put("bighold",""+mcs.getInt(4));
+                            int h = mcs.getInt(5);
+                            item.put("hold",""+h);
+                            int f = mcs.getInt(6);
+                            item.put("fin",""+f);
+                            middleData.add(item); //中目標データ配列に追加
+                            if(f==1){//完了済
+                                middleTitle.add(mcs.getString(1)+"(完)");
+                            }
+                            else if(h==1){//保留中
+                                middleTitle.add(mcs.getString(1)+"(保)");
+                            }
+                            else{
+                                middleTitle.add(mcs.getString(1));
+                            }
+                            next = mcs.moveToNext();
+                        }
+
+                    }
                 }
 
                 //トランザクション成功

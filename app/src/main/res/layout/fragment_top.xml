@@ -22,49 +22,69 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <and.todo.CustomSpinner
-                android:id="@+id/bigTarget"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/bigLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="6dp"
-                android:minHeight="40dp"
-                android:prompt="@string/big"
-                app:layout_constraintEnd_toStartOf="@+id/BeditButton"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
+                app:layout_constraintTop_toBottomOf="@id/BeditButton">
+
+                <and.todo.CustomSpinner
+                    android:id="@+id/bigTarget"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border"
+                    android:minHeight="40dp"
+                    android:prompt="@string/big"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <and.todo.CustomSpinner
                 android:id="@+id/modeChange"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:background="@drawable/border"
                 android:prompt="@string/modeselecter"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <and.todo.CustomSpinner
-                android:id="@+id/middleTarget"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/middleLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="6dp"
-                android:minWidth="40dp"
-                android:prompt="@string/middle"
-                app:layout_constraintEnd_toStartOf="@+id/MeditButton"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/middleTitle" />
+                app:layout_constraintTop_toBottomOf="@id/MeditButton">
+
+                <and.todo.CustomSpinner
+                    android:id="@+id/middleTarget"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border"
+                    android:minWidth="40dp"
+                    android:prompt="@string/middle"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView
                 android:id="@+id/smallTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:text="@string/small"
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/middleTarget" />
+                app:layout_constraintTop_toBottomOf="@id/middleLayout" />
 
             <TextView
                 android:id="@+id/middleTitle"
@@ -75,7 +95,7 @@
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/bigTarget" />
+                app:layout_constraintTop_toBottomOf="@id/bigLayout" />
 
             <TextView
                 android:id="@+id/bigTitle"
@@ -86,7 +106,7 @@
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/dailyTask" />
+                app:layout_constraintTop_toBottomOf="@+id/modeChange" />
 
             <TextView
                 android:id="@+id/scheduleTitle"
@@ -135,6 +155,9 @@
                     android:id="@+id/todayScheduleList"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/border"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -150,20 +173,22 @@
                 android:id="@+id/BdeleteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#8BC34A"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/bigTarget"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle"
                 app:srcCompat="@drawable/garbagecan" />
 
             <ImageButton
                 android:id="@+id/BeditButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#FF9800"
                 app:layout_constraintEnd_toStartOf="@+id/BdeleteButton"
-                app:layout_constraintTop_toTopOf="@+id/bigTarget"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle"
                 app:srcCompat="@drawable/edit" />
 
             <ImageButton
@@ -173,7 +198,6 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:backgroundTint="#FF9800"
-                app:layout_constraintBottom_toTopOf="@id/smallLayout"
                 app:layout_constraintEnd_toStartOf="@+id/SdeleteButton"
                 app:layout_constraintTop_toBottomOf="@+id/smallTitle"
                 app:srcCompat="@drawable/edit" />
@@ -193,10 +217,11 @@
                 android:id="@+id/MeditButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#FF9800"
                 app:layout_constraintEnd_toStartOf="@+id/MdeleteButton"
-                app:layout_constraintTop_toTopOf="@+id/middleTarget"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle"
                 app:srcCompat="@drawable/edit" />
 
 
@@ -207,12 +232,15 @@
                 android:layout_marginTop="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/SeditButton">
+                app:layout_constraintTop_toBottomOf="@+id/SdeleteButton">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/smallTargetList"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/border"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -224,10 +252,11 @@
                 android:id="@+id/MdeleteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#8BC34A"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/middleTarget"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle"
                 app:srcCompat="@drawable/garbagecan" />
 
             <TextView
@@ -268,17 +297,18 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/todoEdit"
-                app:layout_constraintVertical_bias="1.0">
+                app:layout_constraintTop_toBottomOf="@id/todoEdit">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/todoList"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/border"
                     android:scrollbars="vertical"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -290,14 +320,156 @@
                 android:id="@+id/dailyTask"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="100dp"
                 android:backgroundTint="#EF6CA0"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="日課タスク達成度"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/modeChange" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/todoLayout" />
+
+            <Button
+                android:id="@+id/BholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/BeditButton"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
+
+            <Button
+                android:id="@+id/BfinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/BholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
+
+            <Button
+                android:id="@+id/todoholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/todoEdit"
+                app:layout_constraintTop_toBottomOf="@+id/todo" />
+
+            <Button
+                android:id="@+id/todofinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/todoholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/todo" />
+
+            <Button
+                android:id="@+id/ScheholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/ScheEditButton"
+                app:layout_constraintTop_toBottomOf="@+id/scheduleTitle" />
+
+            <Button
+                android:id="@+id/SchefinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/ScheholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/scheduleTitle" />
+
+            <Button
+                android:id="@+id/SholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/SeditButton"
+                app:layout_constraintTop_toBottomOf="@+id/smallTitle" />
+
+            <Button
+                android:id="@+id/SfinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/SholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/smallTitle" />
+
+            <Button
+                android:id="@+id/MholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/MeditButton"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle" />
+
+            <Button
+                android:id="@+id/MfinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/MholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

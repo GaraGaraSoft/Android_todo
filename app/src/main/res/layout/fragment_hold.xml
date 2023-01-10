@@ -44,29 +44,50 @@
                 app:layout_constraintTop_toBottomOf="@+id/smallTitle"
                 app:srcCompat="@drawable/edit" />
 
-            <and.todo.CustomSpinner
-                android:id="@+id/bigTarget"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/bigLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="6dp"
-                android:minHeight="40dp"
-                android:prompt="@string/big"
-                app:layout_constraintEnd_toStartOf="@+id/BeditButton"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
+                app:layout_constraintTop_toBottomOf="@id/BeditButton">
 
-            <and.todo.CustomSpinner
-                android:id="@+id/middleTarget"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                <and.todo.CustomSpinner
+                    android:id="@+id/bigTarget"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border"
+                    android:minHeight="40dp"
+                    android:prompt="@string/big"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/middleLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="6dp"
-                android:minWidth="40dp"
-                android:prompt="@string/middle"
-                app:layout_constraintEnd_toStartOf="@+id/MeditButton"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/middleTitle" />
+                app:layout_constraintTop_toBottomOf="@id/MeditButton">
+
+                <and.todo.CustomSpinner
+                    android:id="@+id/middleTarget"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border"
+                    android:minWidth="40dp"
+                    android:prompt="@string/middle"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/smallLayout"
@@ -98,7 +119,7 @@
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/middleTarget" />
+                app:layout_constraintTop_toBottomOf="@id/middleLayout" />
 
             <TextView
                 android:id="@+id/middleTitle"
@@ -109,7 +130,7 @@
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/bigTarget" />
+                app:layout_constraintTop_toBottomOf="@id/bigLayout" />
 
             <TextView
                 android:id="@+id/bigTitle"
@@ -122,44 +143,48 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/holdTitle" />
 
-    <ImageButton
-        android:id="@+id/BdeleteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:backgroundTint="#8BC34A"
-        app:srcCompat="@drawable/garbagecan"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/bigTarget" />
+            <ImageButton
+                android:id="@+id/BdeleteButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#8BC34A"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle"
+                app:srcCompat="@drawable/garbagecan" />
 
             <ImageButton
                 android:id="@+id/BeditButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#FF9800"
                 app:layout_constraintEnd_toStartOf="@+id/BdeleteButton"
-                app:layout_constraintTop_toTopOf="@+id/bigTarget"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle"
                 app:srcCompat="@drawable/edit" />
 
             <ImageButton
                 android:id="@+id/MeditButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#FF9800"
                 app:layout_constraintEnd_toStartOf="@+id/MdeleteButton"
-                app:layout_constraintTop_toTopOf="@+id/middleTarget"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle"
                 app:srcCompat="@drawable/edit" />
 
             <ImageButton
                 android:id="@+id/MdeleteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="#8BC34A"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/middleTarget"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle"
                 app:srcCompat="@drawable/garbagecan" />
 
             <TextView
@@ -234,6 +259,120 @@
                 android:layout_marginTop="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+
+            <Button
+                android:id="@+id/BholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/BeditButton"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
+
+            <Button
+                android:id="@+id/BfinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/BholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/bigTitle" />
+
+            <Button
+                android:id="@+id/MholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/MeditButton"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle" />
+
+            <Button
+                android:id="@+id/MfinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/MholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/middleTitle" />
+
+
+            <Button
+                android:id="@+id/SholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/SeditButton"
+                app:layout_constraintTop_toBottomOf="@+id/smallTitle" />
+
+            <Button
+                android:id="@+id/SfinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/SholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/smallTitle" />
+
+            <Button
+                android:id="@+id/todoholdButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#3D7FA3"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="H"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/todoEdit"
+                app:layout_constraintTop_toBottomOf="@+id/todo" />
+
+            <Button
+                android:id="@+id/todofinishButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#9F3434"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="F"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@+id/todoholdButton"
+                app:layout_constraintTop_toBottomOf="@+id/todo" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -45,12 +45,12 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
     private Spinner spinLevel; //目標Spinner
     private int titleNum; //タイトル文字数
     private Button editBtn; //編集完了ボタン
-    private String beforelevel="none";
+    //private String beforelevel="none";
     private int big=0; //上目標
-    private String bigtitle=""; //ToDo 上目標タイトル
+    private String bigtitle=""; // 上目標タイトル
     private int bighold=0;
     private int middle=0; //中目標
-    private String middletitle="";//ToDo 中目標タイトル
+    private String middletitle="";// 中目標タイトル
     private int middlehold=0;
     private String date = ""; //日付
     private int hold = 0; //保留判定(0は保留なし）
@@ -123,8 +123,12 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
         //データベースヘルパー準備
         helper = new EditDatabaseHelper(requireActivity());
 
-        //データベースから大目標、中目標を取得(新規追加用)
-        getTarget();
+        getbigTarget();
+        int bigsize = bigData.size();//大目標が存在するかの判定変数
+        level = "small";
+        getbigTarget();
+        int middlesize = bigData.size();//中目標が存在するかの判定変数
+        level = "big";//初期状態を大目標にセット
 
         ArrayAdapter<String> bigAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,bigTitle);
         ArrayAdapter<String> middleAdapter = new ArrayAdapter<>(requireActivity(),android.R.layout.simple_spinner_dropdown_item,middleTitle);
@@ -140,13 +144,13 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
         //目標選択スピナー取得
         spinLevel = (Spinner) view.findViewById(R.id.spinLevel);
         ArrayList<String> levelList = new ArrayList<>();
-        if(bigData.size() >0 && middleData.size() >0){ //大中目標が存在するとき
+        if(bigsize >0 && middlesize >0){ //大中目標が存在するとき
             levelList.add("大目標");
             levelList.add("中目標");
             levelList.add("小目標");
             levelList.add("スケジュール");
             levelList.add("やること");
-        }else if(bigData.size()>0){//大目標が存在するとき
+        }else if(bigsize>0){//大目標が存在するとき
             levelList.add("大目標");
             levelList.add("中目標");
             levelList.add("スケジュール");
@@ -378,7 +382,11 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
 
                     //中目標を選択時、大目標の選択肢を出す
                     Spinner bSpin = (Spinner) view.findViewById(R.id.bSpin);
-                    bSpin.setAdapter(bigAdapter);
+                    getbigTarget();//大目標配列を取得
+                    ArrayAdapter<String> bigAdapter =
+                            new ArrayAdapter<>(requireActivity(),
+                                    android.R.layout.simple_spinner_dropdown_item,bigTitle);
+                    bSpin.setAdapter(bigAdapter);//Spinnerに大目標を再設定
                     middle=0; //中目標を初期化
                     middletitle = "";
                     middlehold=0;
@@ -388,6 +396,7 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
                     bigtitle = bigData.get(0).get("title"); //大目標一番上のタイトルを設定
                     bighold = Integer.parseInt(bigData.get(0).get("hold")); //大目標一番上の保留状態
                     //beforelevel = level;
+
 
                     bSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
                         @Override
@@ -415,24 +424,60 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
                     getLayoutInflater().inflate(R.layout.middletarget, layout);
 
                     //小目標を選択時、大中目標の選択肢を出す
+                    Spinner bSpin = (Spinner) view.findViewById(R.id.bSpin);
                     Spinner mSpin = (Spinner) view.findViewById(R.id.mSpin);
+
+                    getbigTarget();//大目標データを取得
+                    ArrayAdapter<String> bigAdapter =
+                            new ArrayAdapter<>(requireActivity(),
+                                    android.R.layout.simple_spinner_dropdown_item,bigTitle);
+                    bSpin.setAdapter(bigAdapter);//Spinnerに大目標を再設定
+                    big = Integer.parseInt(bigData.get(0).get("id")); //大目標の一番上を設定
+                    bigtitle = bigData.get(0).get("title"); //大目標一番上のタイトルを設定
+                    bighold = Integer.parseInt(bigData.get(0).get("hold")); //大目標一番上の保留状態
+
+                    getmiddleTarget(0);//一番上の大目標下の中目標データ配列を取得
+                    ArrayAdapter<String> middleAdapter =
+                            new ArrayAdapter<>(requireActivity(),
+                                    android.R.layout.simple_spinner_dropdown_item,middleTitle);
                     mSpin.setAdapter(middleAdapter);
-                    date = ""; //中目標を初期化
-                    dateok = false;
                     middle = Integer.parseInt(middleData.get(0).get("id")); //中目標の一番上を設定
                     middletitle = middleData.get(0).get("title"); //中目標一番上のタイトル設定
                     middlehold = Integer.parseInt(middleData.get(0).get("hold"));
-                    big = Integer.parseInt(middleData.get(0).get("big"));//大目標の一番上を設定
-                    bigtitle = middleData.get(0).get("bigtitle"); //大目標一番上のタイトル設定
-                    bighold = Integer.parseInt(middleData.get(0).get("bighold")); //大目標一番上の保留状態設定
+
+                    date = ""; //日付情報を初期化
+                    dateok = false;
                     //beforelevel = level;
+
+                    bSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+                        @Override
+                        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            big = Integer.parseInt(bigData.get(i).get("id"));
+                            bigtitle = bigData.get(i).get("title");
+                            bighold = Integer.parseInt(bigData.get(i).get(
+                                    "hold"));
+
+                            getmiddleTarget(i);//選択した大目標下の中目標データ配列を取得
+                            ArrayAdapter<String> middleAdapter =
+                                    new ArrayAdapter<>(requireActivity(),
+                                            android.R.layout.simple_spinner_dropdown_item,middleTitle);
+                            mSpin.setAdapter(middleAdapter);
+                            middle = Integer.parseInt(middleData.get(0).get("id")); //中目標の一番上を設定
+                            middletitle = middleData.get(0).get("title"); //中目標一番上のタイトル設定
+                            middlehold = Integer.parseInt(middleData.get(0).get("hold"));
+
+
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> adapterView) {
+
+                        }
+                    });
 
                     mSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
                         @Override
                         public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                            big = Integer.parseInt(middleData.get(i).get("big"));
-                            bigtitle = middleData.get(i).get("bigtitle");
-                            bighold = Integer.parseInt(middleData.get(i).get("bighold"));
                             middle = Integer.parseInt(middleData.get(i).get("id"));
                             middletitle = middleData.get(i).get("title");
                             middlehold = Integer.parseInt(middleData.get(i).get("hold"));
@@ -536,7 +581,7 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
         editDate.setText(date);
     }
 
-    public void getTarget(){ //データ新規追加時、上中目標取得
+    public void getbigTarget(){ //中小目標選択時の大目標配列を取得
 
         try(SQLiteDatabase db = helper.getReadableDatabase()){
             //トランザクション開始
@@ -551,20 +596,91 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
                 bigTitle.clear();
                 boolean next = bcs.moveToFirst();//カーソルの先頭に移動
                 while(next){ //Cursorデータが空になるまでbigTitle,bigDataに加えていく
-                    HashMap<String,String> item = new HashMap<>();
-                            item.put("id",""+bcs.getInt(0));
-                            item.put("title",bcs.getString(1));
-                            item.put("hold",""+bcs.getInt(2));
-                    bigData.add(item);
-                    if(bcs.getInt(2)==1){ //保留中
-                        bigTitle.add(bcs.getString(1)+"(保)");//大目標のタイトル
-                    }else{ //非保留中
-                        bigTitle.add(bcs.getString(1));//大目標のタイトル
+                    int big = bcs.getInt(0);
+
+                    if(level.equals("small")) {
+                        Cursor bigExist = db.query("ToDoData", new String[]{
+                                        "count" +
+                                                "(*)"},
+                                "level" +
+                                        "=? " +
+                                        "and" +
+                                        " big=?", new String[]{"middle", "" + big}, null,
+                                null, null,
+                                null);//大目標の下にある中目標の数
+
+                        bigExist.moveToFirst();
+
+                        if (bigExist.getInt(0) == 0) {//下に中目標が存在しない大目標は飛ばす
+                            next = bcs.moveToNext();
+                            continue;
+                        }
                     }
 
+                    HashMap<String,String> item = new HashMap<>();
+                    item.put("id",""+big);//大目標のID
+                    item.put("title",bcs.getString(1));
+                    int h = bcs.getInt(2);
+                    item.put("hold",""+h);//大目標の待機状態
+                    bigData.add(item);
+                    if(h==1){ //保留中
+                        bigTitle.add(bcs.getString(1)+"(保)");//大目標のタイトル
+                    }
+                    else{ //非保留中
+                        bigTitle.add(bcs.getString(1));//大目標のタイトル
+                    }
                     next = bcs.moveToNext();
+
                 }
 
+                //トランザクション成功
+                db.setTransactionSuccessful();
+            }catch(SQLException e){
+                e.printStackTrace();
+            }finally{
+                //トランザクションを終了
+                db.endTransaction();
+            }
+        }
+    }
+
+    public void getmiddleTarget(int sel){ //小目標選択時の中目標配列を取得
+
+        try(SQLiteDatabase db = helper.getReadableDatabase()){
+            //トランザクション開始
+            db.beginTransaction();
+            try{
+
+                //中目標を取得
+                String[] mcols = {"id", "title", "big","bigtitle",
+                        "bighold","hold"};//SQLデータから取得する列
+                String[] mlevel = {"middle",""+bigData.get(sel).get("id")};
+                //中目標のみを抽出
+                Cursor mcs = db.query("ToDoData", mcols, "level=? and" +
+                        " big=?", mlevel, null, null, null, null);
+                middleData.clear(); //いったん配列を空にする
+                middleTitle.clear();
+                boolean next = mcs.moveToFirst();//カーソルの先頭に移動
+                while (next) {
+                    HashMap<String, String> item = new HashMap<>();
+                    item.put("id", "" + mcs.getInt(0));
+                    item.put("title",mcs.getString(1));
+                    item.put("big", "" + mcs.getInt(2));
+                    item.put("bigtitle",mcs.getString(3));
+                    item.put("bighold",""+mcs.getInt(4));
+                    int h = mcs.getInt(5);
+                    item.put("hold",""+h);
+                    middleData.add(item); //中目標データ配列に追加
+                    if(h==1){//保留中
+                        middleTitle.add(mcs.getString(1)+"(保)");
+                    }
+                    else{
+                        middleTitle.add(mcs.getString(1));
+                    }
+                    next = mcs.moveToNext();
+                }
+
+/*
                 //中目標を取得
                 String[] mcols = {"id","title","big","bigtitle","bighold","hold"};//SQLデータから取得する列
                 String[] mlevel = { "middle","0" };//中目標のみを抽出
@@ -598,6 +714,7 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
 
                     next = mcs.moveToNext();
                 }
+*/
 
 
 
