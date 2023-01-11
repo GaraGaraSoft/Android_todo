@@ -22,6 +22,7 @@ public class HoldDialogFragment extends DialogFragment {
         return fragment;
     }
 
+
     public interface HoldDialogListener {
         public void onHoldDialogPositiveClick(DialogFragment dialog);
         public void onHoldDialogNegativeClick(DialogFragment dialog);

@@ -13,6 +13,7 @@ import androidx.fragment.app.DialogFragment;
 
 public class DelDialogFragment extends DialogFragment {
 
+
     public static DelDialogFragment newInstance(Bundle Data){//インスタンス作成時にまず呼び出す
         // インスタンス生成
         DelDialogFragment fragment = new DelDialogFragment ();

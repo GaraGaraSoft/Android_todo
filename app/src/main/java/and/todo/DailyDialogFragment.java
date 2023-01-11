@@ -73,5 +73,4 @@ public class DailyDialogFragment extends DialogFragment {
 
         return dialog;
     }
-
 }

@@ -70,4 +70,5 @@ public class DailyAdapter extends ArrayAdapter {
         TextView dailyTaskTitle;
 
     }
+
 }

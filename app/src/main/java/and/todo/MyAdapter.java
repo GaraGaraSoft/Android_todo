@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 public class MyAdapter  extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
+
     private final ArrayList<String> localDataSet;
 
     /**

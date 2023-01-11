@@ -17,6 +17,7 @@ public class CustomSpinner extends androidx.appcompat.widget.AppCompatSpinner {
     public CustomSpinner(Context context, AttributeSet attrs, int defStyle)
     { super(context, attrs, defStyle); }
 
+
     @Override public void
     setSelection(int position, boolean animate)
     {

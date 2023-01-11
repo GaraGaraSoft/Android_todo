@@ -21,6 +21,7 @@ public class FinDialogFragment extends DialogFragment {
         return fragment;
     }
 
+
     public interface FinDialogListener {
         public void onFinDialogPositiveClick(DialogFragment dialog);
         public void onFinDialogNegativeClick(DialogFragment dialog);
