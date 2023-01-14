@@ -780,6 +780,7 @@ public class NewFragment extends Fragment implements DateDialogFragment.DateDial
                     if(inputDate.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")){
                         String str = "OK";
                         txtCheck.setText(str);
+                        date = inputDate;
                         dateok = true;
                         if(titleNum>0){ //タイトル入力時にボタン有効化
                             editBtn.setEnabled(true);
